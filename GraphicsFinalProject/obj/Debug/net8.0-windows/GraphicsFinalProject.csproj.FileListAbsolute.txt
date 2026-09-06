@@ -29,3 +29,6 @@ C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\obj\
 C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\obj\Debug\net8.0-windows\GraphicsFinalProject.pdb
 C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\obj\Debug\net8.0-windows\GraphicsFinalProject.genruntimeconfig.cache
 C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\obj\Debug\net8.0-windows\ref\GraphicsFinalProject.dll
+C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\obj\Debug\net8.0-windows\GraphicsFinalProject.sourcelink.json
+C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\bin\Debug\net8.0-windows\Shaders\basic.vert
+C:\Users\alon1\OneDrive\Documents\graphicsFinalProject\GraphicsFinalProject\bin\Debug\net8.0-windows\Shaders\basic.frag

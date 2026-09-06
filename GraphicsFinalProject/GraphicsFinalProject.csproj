@@ -13,4 +13,10 @@
     <PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Shaders\**\*.vert;Shaders\**\*.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
