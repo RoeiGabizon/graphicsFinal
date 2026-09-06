@@ -22,17 +22,27 @@ public class MainForm : Form
     private readonly Label _titleLabel;
     private readonly Renderer _renderer = new();
     private readonly Camera _camera = new(new Vector3(0.0f, 1.5f, 5.0f));
+    private readonly Robot _robot = new()
+    {
+        // Standing near the corridor entrance, facing down the corridor
+        // (which runs along -Z).
+        Position = new Vector3(0.0f, 0.0f, -2.0f),
+        RotationY = 180.0f,
+    };
     private readonly Stopwatch _clock = new();
 
     private readonly HashSet<Keys> _pressedKeys = new();
     private bool _isLooking;
     private Point _lastMousePosition;
+    private bool _isAnimationPaused;
+    private bool _spaceWasDown;
 
     public MainForm()
     {
         Text = "Graphics Final Project";
         Width = 1200;
         Height = 800;
+        KeyPreview = true;
 
         // GLControl settings: request an OpenGL 3.3 Core profile context.
         var glSettings = new GLControlSettings
@@ -52,8 +62,11 @@ public class MainForm : Form
         _glControl.Paint += GlControl_Paint;
 
         // Camera input: keyboard for movement, mouse for look/zoom.
-        _glControl.KeyDown += GlControl_KeyDown;
-        _glControl.KeyUp += GlControl_KeyUp;
+        // Hooked on the Form (via KeyPreview) rather than the GLControl so
+        // input still works regardless of which child control has focus.
+        KeyDown += GlControl_KeyDown;
+        KeyUp += GlControl_KeyUp;
+        PreviewKeyDown += GlControl_PreviewKeyDown;
         _glControl.MouseDown += GlControl_MouseDown;
         _glControl.MouseUp += GlControl_MouseUp;
         _glControl.MouseMove += GlControl_MouseMove;
@@ -115,7 +128,24 @@ public class MainForm : Form
             down: _pressedKeys.Contains(Keys.Q),
             deltaTime: deltaTime);
 
-        _renderer.Render(deltaTime, _camera);
+        // Space toggles pause on press (not held), so tapping it doesn't
+        // rapidly flip the pause state every frame.
+        bool spaceIsDown = _pressedKeys.Contains(Keys.Space);
+        if (spaceIsDown && !_spaceWasDown)
+        {
+            _isAnimationPaused = !_isAnimationPaused;
+        }
+        _spaceWasDown = spaceIsDown;
+
+        _robot.Update(
+            deltaTime: deltaTime,
+            moveForward: _pressedKeys.Contains(Keys.Up),
+            moveBackward: _pressedKeys.Contains(Keys.Down),
+            rotateLeft: _pressedKeys.Contains(Keys.Left),
+            rotateRight: _pressedKeys.Contains(Keys.Right),
+            animate: !_isAnimationPaused);
+
+        _renderer.Render(deltaTime, _camera, _robot);
         _glControl.SwapBuffers();
     }
 
@@ -127,6 +157,23 @@ public class MainForm : Form
     private void GlControl_KeyUp(object? sender, KeyEventArgs e)
     {
         _pressedKeys.Remove(e.KeyCode);
+    }
+
+    private void GlControl_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
+    {
+        // Arrow keys and Space are normally reserved by WinForms for
+        // dialog/control navigation and never reach KeyDown unless we
+        // explicitly ask for them here.
+        switch (e.KeyCode)
+        {
+            case Keys.Up:
+            case Keys.Down:
+            case Keys.Left:
+            case Keys.Right:
+            case Keys.Space:
+                e.IsInputKey = true;
+                break;
+        }
     }
 
     private void GlControl_MouseDown(object? sender, MouseEventArgs e)

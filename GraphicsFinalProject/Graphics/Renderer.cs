@@ -18,7 +18,6 @@ public class Renderer
     private Shader? _shader;
     private Mesh? _cubeMesh;
     private Corridor? _corridor;
-    private Robot? _robot;
     private float _aspectRatio = 1.0f;
 
     public void Initialize()
@@ -33,14 +32,6 @@ public class Renderer
 
         _cubeMesh = new Mesh(CubeVertices, CubeIndices);
         _corridor = new Corridor();
-
-        // Place the robot standing near the corridor entrance, facing
-        // down the corridor (which runs along -Z).
-        _robot = new Robot
-        {
-            Position = new Vector3(0.0f, 0.0f, -2.0f),
-            RotationY = 180.0f,
-        };
     }
 
     public void Resize(int width, int height)
@@ -52,11 +43,11 @@ public class Renderer
         }
     }
 
-    public void Render(float deltaTime, Camera camera)
+    public void Render(float deltaTime, Camera camera, Robot robot)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        if (_shader is null || _cubeMesh is null || _corridor is null || _robot is null)
+        if (_shader is null || _cubeMesh is null || _corridor is null)
         {
             return;
         }
@@ -69,7 +60,7 @@ public class Renderer
         _shader.SetMatrix4("uProjection", projection);
 
         _corridor.Draw(DrawCube);
-        _robot.Draw(DrawCube);
+        robot.Draw(DrawCube);
     }
 
     /// <summary>

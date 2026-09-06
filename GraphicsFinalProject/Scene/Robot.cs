@@ -29,6 +29,104 @@ public class Robot
     public float LeftLegAngle { get; set; }
     public float RightLegAngle { get; set; }
 
+    // --- Movement / animation tuning ---
+    private const float MoveSpeed = 2.0f;             // world units per second
+    private const float RotateSpeedDegrees = 90.0f;   // degrees per second
+    private const float WalkCycleSpeed = 6.0f;        // radians per second inside sin()
+    private const float MaxLimbSwingDegrees = 30.0f;  // how far arms/legs swing
+    private const float ReturnToRestSpeedDegrees = 180.0f; // degrees per second when easing to neutral
+
+    /// <summary>Seconds of accumulated walking time, used as the input to sin().</summary>
+    private float _walkAnimationTime;
+
+    /// <summary>
+    /// The direction the robot is currently facing in world space, derived
+    /// from RotationY. At RotationY = 0 the robot faces +Z; rotating it
+    /// spins this vector around the world Y axis, same as the root matrix
+    /// rotates the robot's geometry.
+    /// </summary>
+    public Vector3 ForwardDirection =>
+        Vector3.TransformVector(Vector3.UnitZ, Matrix4.CreateRotationY(MathHelper.DegreesToRadians(RotationY)));
+
+    /// <summary>
+    /// Advances the robot's position/rotation and, if walking, its limb
+    /// animation. Called once per frame with the current input state.
+    /// </summary>
+    /// <param name="deltaTime">Seconds since the last frame.</param>
+    /// <param name="moveForward">Move along ForwardDirection.</param>
+    /// <param name="moveBackward">Move opposite ForwardDirection.</param>
+    /// <param name="rotateLeft">Turn the robot counter-clockwise (seen from above).</param>
+    /// <param name="rotateRight">Turn the robot clockwise (seen from above).</param>
+    /// <param name="animate">
+    /// If false, movement still happens but limb animation is frozen in
+    /// its current pose (used for the pause/resume control).
+    /// </param>
+    public void Update(float deltaTime, bool moveForward, bool moveBackward, bool rotateLeft, bool rotateRight, bool animate)
+    {
+        if (rotateLeft)
+        {
+            RotationY -= RotateSpeedDegrees * deltaTime;
+        }
+        if (rotateRight)
+        {
+            RotationY += RotateSpeedDegrees * deltaTime;
+        }
+
+        Vector3 forward = ForwardDirection;
+        if (moveForward)
+        {
+            Position += forward * MoveSpeed * deltaTime;
+        }
+        if (moveBackward)
+        {
+            Position -= forward * MoveSpeed * deltaTime;
+        }
+
+        bool isWalking = moveForward || moveBackward;
+
+        if (isWalking && animate)
+        {
+            // Advance the walk cycle clock only while actually walking, so
+            // the animation doesn't keep spinning while standing still.
+            _walkAnimationTime += deltaTime;
+
+            // A single sine wave drives all four limbs. Left arm and right
+            // leg share a phase, right arm and left leg share the opposite
+            // phase - this is what makes it look like walking rather than
+            // everything swinging together.
+            float swing = MathF.Sin(_walkAnimationTime * WalkCycleSpeed) * MaxLimbSwingDegrees;
+            LeftArmAngle = swing;
+            RightArmAngle = -swing;
+            LeftLegAngle = -swing;
+            RightLegAngle = swing;
+        }
+        else if (!isWalking)
+        {
+            // Stopped: ease all limbs back toward neutral (0 degrees)
+            // instead of snapping, so the stop looks smooth. If "animate"
+            // is false because the whole robot is paused mid-swing, this
+            // branch still runs (isWalking is false), which is fine - the
+            // robot is standing still either way.
+            float step = ReturnToRestSpeedDegrees * deltaTime;
+            LeftArmAngle = MoveToward(LeftArmAngle, 0.0f, step);
+            RightArmAngle = MoveToward(RightArmAngle, 0.0f, step);
+            LeftLegAngle = MoveToward(LeftLegAngle, 0.0f, step);
+            RightLegAngle = MoveToward(RightLegAngle, 0.0f, step);
+        }
+        // else: isWalking && !animate -> paused mid-stride, limbs stay
+        // exactly as they are so animation can resume from the same pose.
+    }
+
+    private static float MoveToward(float current, float target, float maxDelta)
+    {
+        if (MathF.Abs(target - current) <= maxDelta)
+        {
+            return target;
+        }
+
+        return current + MathF.Sign(target - current) * maxDelta;
+    }
+
     // --- Body part sizes (kept as fields so the joint math below can
     //     reference them directly - this is a display robot, not a
     //     configurable rig) ---
