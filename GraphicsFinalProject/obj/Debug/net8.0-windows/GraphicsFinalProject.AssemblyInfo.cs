@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GraphicsFinalProject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+39aa3238f22a1edc861908c87b0b2986b4642b7f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c7d8bf978b8ed91c2231c6d60dc9f3bbc8bd536")]
 [assembly: System.Reflection.AssemblyProductAttribute("GraphicsFinalProject")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GraphicsFinalProject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

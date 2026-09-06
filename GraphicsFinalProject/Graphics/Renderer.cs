@@ -1,5 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using GraphicsFinalProject.Scene;
 
 namespace GraphicsFinalProject.Graphics;
 
@@ -36,7 +37,7 @@ public class Renderer
         }
     }
 
-    public void Render(float deltaTime)
+    public void Render(float deltaTime, Camera camera)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -50,16 +51,8 @@ public class Renderer
 
         Matrix4 model = Matrix4.CreateRotationY(_rotationAngle) * Matrix4.CreateRotationX(_rotationAngle * 0.5f);
 
-        Matrix4 view = Matrix4.LookAt(
-            eye: new Vector3(0.0f, 1.5f, 5.0f),
-            target: Vector3.Zero,
-            up: Vector3.UnitY);
-
-        Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(
-            MathHelper.DegreesToRadians(60.0f),
-            _aspectRatio,
-            0.1f,
-            100.0f);
+        Matrix4 view = camera.GetViewMatrix();
+        Matrix4 projection = camera.GetProjectionMatrix(_aspectRatio);
 
         _shader.Use();
         _shader.SetMatrix4("uModel", model);
