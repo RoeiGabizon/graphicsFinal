@@ -7,17 +7,23 @@ namespace GraphicsFinalProject.Graphics;
 /// <summary>
 /// Holds the core OpenGL setup and per-frame rendering logic.
 /// Kept intentionally simple: no scene graph, no engine abstractions.
+///
+/// Owns exactly one unit-cube Mesh. Every cube-shaped object in the scene
+/// (corridor walls, floor, decorations, later the robot) reuses this same
+/// mesh through DrawCube(model, color) - only the model matrix and color
+/// uniform change between draws.
 /// </summary>
 public class Renderer
 {
     private Shader? _shader;
-    private Mesh? _cube;
+    private Mesh? _cubeMesh;
+    private Corridor? _corridor;
     private float _aspectRatio = 1.0f;
     private float _rotationAngle;
 
     public void Initialize()
     {
-        GL.ClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        GL.ClearColor(0.05f, 0.05f, 0.08f, 1.0f);
         GL.Enable(EnableCap.DepthTest);
 
         string shaderDir = Path.Combine(AppContext.BaseDirectory, "Shaders");
@@ -25,7 +31,8 @@ public class Renderer
             Path.Combine(shaderDir, "basic.vert"),
             Path.Combine(shaderDir, "basic.frag"));
 
-        _cube = new Mesh(CubeVertices, CubeIndices);
+        _cubeMesh = new Mesh(CubeVertices, CubeIndices);
+        _corridor = new Corridor();
     }
 
     public void Resize(int width, int height)
@@ -41,74 +48,87 @@ public class Renderer
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        if (_shader is null || _cube is null)
+        if (_shader is null || _cubeMesh is null || _corridor is null)
         {
             return;
         }
-
-        // Slowly rotate the cube over time.
-        _rotationAngle += deltaTime * MathHelper.DegreesToRadians(30.0f);
-
-        Matrix4 model = Matrix4.CreateRotationY(_rotationAngle) * Matrix4.CreateRotationX(_rotationAngle * 0.5f);
 
         Matrix4 view = camera.GetViewMatrix();
         Matrix4 projection = camera.GetProjectionMatrix(_aspectRatio);
 
         _shader.Use();
-        _shader.SetMatrix4("uModel", model);
         _shader.SetMatrix4("uView", view);
         _shader.SetMatrix4("uProjection", projection);
 
-        _cube.Draw();
+        _corridor.Draw(DrawCube);
+
+        // Small spinning cube kept from Phase 1 as a reference/demo object.
+        _rotationAngle += deltaTime * MathHelper.DegreesToRadians(30.0f);
+        Matrix4 demoModel =
+            Matrix4.CreateRotationY(_rotationAngle) *
+            Matrix4.CreateRotationX(_rotationAngle * 0.5f) *
+            Matrix4.CreateTranslation(0.0f, 1.5f, 0.0f);
+        DrawCube(demoModel, new Vector3(0.9f, 0.9f, 0.9f));
+    }
+
+    /// <summary>
+    /// Draws the shared unit cube mesh with the given model matrix and
+    /// flat color. This is how one mesh becomes many different-looking
+    /// objects: only the uniforms change between calls, not the geometry.
+    /// </summary>
+    private void DrawCube(Matrix4 model, Vector3 color)
+    {
+        _shader!.SetMatrix4("uModel", model);
+        _shader.SetVector3("uColor", color);
+        _cubeMesh!.Draw();
     }
 
     public void Dispose()
     {
-        _cube?.Dispose();
+        _cubeMesh?.Dispose();
         _shader?.Dispose();
     }
 
-    // Cube centered at the origin, side length 1. Each face has its own
-    // 4 vertices (rather than sharing corners) so each face can have a
-    // distinct flat color.
+    // Unit cube centered at the origin (side length 1), position-only.
+    // Scale/translate/rotate this via the model matrix to build any
+    // box-shaped object (walls, beams, panels, robot parts, ...).
     private static readonly float[] CubeVertices =
     {
-        // Position           // Color (per face)
-        // Front face (red)
-        -0.5f, -0.5f,  0.5f,  1f, 0f, 0f,
-         0.5f, -0.5f,  0.5f,  1f, 0f, 0f,
-         0.5f,  0.5f,  0.5f,  1f, 0f, 0f,
-        -0.5f,  0.5f,  0.5f,  1f, 0f, 0f,
+        // Front face
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
 
-        // Back face (green)
-         0.5f, -0.5f, -0.5f,  0f, 1f, 0f,
-        -0.5f, -0.5f, -0.5f,  0f, 1f, 0f,
-        -0.5f,  0.5f, -0.5f,  0f, 1f, 0f,
-         0.5f,  0.5f, -0.5f,  0f, 1f, 0f,
+        // Back face
+         0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
 
-        // Left face (blue)
-        -0.5f, -0.5f, -0.5f,  0f, 0f, 1f,
-        -0.5f, -0.5f,  0.5f,  0f, 0f, 1f,
-        -0.5f,  0.5f,  0.5f,  0f, 0f, 1f,
-        -0.5f,  0.5f, -0.5f,  0f, 0f, 1f,
+        // Left face
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
 
-        // Right face (yellow)
-         0.5f, -0.5f,  0.5f,  1f, 1f, 0f,
-         0.5f, -0.5f, -0.5f,  1f, 1f, 0f,
-         0.5f,  0.5f, -0.5f,  1f, 1f, 0f,
-         0.5f,  0.5f,  0.5f,  1f, 1f, 0f,
+        // Right face
+         0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
 
-        // Top face (cyan)
-        -0.5f,  0.5f,  0.5f,  0f, 1f, 1f,
-         0.5f,  0.5f,  0.5f,  0f, 1f, 1f,
-         0.5f,  0.5f, -0.5f,  0f, 1f, 1f,
-        -0.5f,  0.5f, -0.5f,  0f, 1f, 1f,
+        // Top face
+        -0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
 
-        // Bottom face (magenta)
-        -0.5f, -0.5f, -0.5f,  1f, 0f, 1f,
-         0.5f, -0.5f, -0.5f,  1f, 0f, 1f,
-         0.5f, -0.5f,  0.5f,  1f, 0f, 1f,
-        -0.5f, -0.5f,  0.5f,  1f, 0f, 1f,
+        // Bottom face
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
     };
 
     private static readonly uint[] CubeIndices =
