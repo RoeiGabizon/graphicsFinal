@@ -18,8 +18,8 @@ public class Renderer
     private Shader? _shader;
     private Mesh? _cubeMesh;
     private Corridor? _corridor;
+    private Robot? _robot;
     private float _aspectRatio = 1.0f;
-    private float _rotationAngle;
 
     public void Initialize()
     {
@@ -33,6 +33,14 @@ public class Renderer
 
         _cubeMesh = new Mesh(CubeVertices, CubeIndices);
         _corridor = new Corridor();
+
+        // Place the robot standing near the corridor entrance, facing
+        // down the corridor (which runs along -Z).
+        _robot = new Robot
+        {
+            Position = new Vector3(0.0f, 0.0f, -2.0f),
+            RotationY = 180.0f,
+        };
     }
 
     public void Resize(int width, int height)
@@ -48,7 +56,7 @@ public class Renderer
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        if (_shader is null || _cubeMesh is null || _corridor is null)
+        if (_shader is null || _cubeMesh is null || _corridor is null || _robot is null)
         {
             return;
         }
@@ -61,14 +69,7 @@ public class Renderer
         _shader.SetMatrix4("uProjection", projection);
 
         _corridor.Draw(DrawCube);
-
-        // Small spinning cube kept from Phase 1 as a reference/demo object.
-        _rotationAngle += deltaTime * MathHelper.DegreesToRadians(30.0f);
-        Matrix4 demoModel =
-            Matrix4.CreateRotationY(_rotationAngle) *
-            Matrix4.CreateRotationX(_rotationAngle * 0.5f) *
-            Matrix4.CreateTranslation(0.0f, 1.5f, 0.0f);
-        DrawCube(demoModel, new Vector3(0.9f, 0.9f, 0.9f));
+        _robot.Draw(DrawCube);
     }
 
     /// <summary>
