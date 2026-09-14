@@ -20,6 +20,19 @@ public class Renderer
     private Corridor? _corridor;
     private float _aspectRatio = 1.0f;
 
+    // One simple point light for the whole scene, placed roughly in the
+    // middle of the corridor so both the robot and the walls are lit.
+    private readonly PointLight _light = new(
+        position: new Vector3(0f, 3.5f, -10f),
+        color: new Vector3(1.0f, 0.95f, 0.85f),
+        intensity: 1.4f);
+
+    private readonly Material _material = Material.Default;
+
+    // Kept fairly strong (per Phase 6 instructions) so the scene stays easy
+    // to see and demonstrate even in areas the point light doesn't reach well.
+    private const float AmbientStrength = 0.25f;
+
     public void Initialize()
     {
         GL.ClearColor(0.05f, 0.05f, 0.08f, 1.0f);
@@ -59,6 +72,14 @@ public class Renderer
         _shader.SetMatrix4("uView", view);
         _shader.SetMatrix4("uProjection", projection);
 
+        _shader.SetVector3("uLightPosition", _light.Position);
+        _shader.SetVector3("uLightColor", _light.Color);
+        _shader.SetFloat("uLightIntensity", _light.Intensity);
+        _shader.SetVector3("uViewPosition", camera.Position);
+        _shader.SetFloat("uAmbientStrength", AmbientStrength);
+        _shader.SetFloat("uSpecularStrength", _material.SpecularStrength);
+        _shader.SetFloat("uShininess", _material.Shininess);
+
         _corridor.Draw(DrawCube);
         robot.Draw(DrawCube);
     }
@@ -72,6 +93,15 @@ public class Renderer
     {
         _shader!.SetMatrix4("uModel", model);
         _shader.SetVector3("uColor", color);
+
+        // The normal matrix corrects normals for non-uniform scaling in the
+        // model matrix (e.g. a wall stretched thin in one axis): it is the
+        // inverse-transpose of the model matrix's upper-left 3x3. Without
+        // this, normals on scaled cubes would no longer be perpendicular to
+        // the actual (scaled) surface, giving wrong-looking lighting.
+        Matrix3 normalMatrix = new Matrix3(Matrix4.Transpose(Matrix4.Invert(model)));
+        _shader.SetMatrix3("uNormalMatrix", normalMatrix);
+
         _cubeMesh!.Draw();
     }
 
@@ -81,46 +111,47 @@ public class Renderer
         _shader?.Dispose();
     }
 
-    // Unit cube centered at the origin (side length 1), position-only.
-    // Scale/translate/rotate this via the model matrix to build any
-    // box-shaped object (walls, beams, panels, robot parts, ...).
+    // Unit cube centered at the origin (side length 1). Each vertex has a
+    // position (3 floats) followed by its face normal (3 floats). Every
+    // face uses its own 4 vertices so each can have a flat, correct normal
+    // (a shared-vertex cube can't do this without smoothing edges).
     private static readonly float[] CubeVertices =
     {
-        // Front face
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
+        // Front face (+Z)
+        -0.5f, -0.5f,  0.5f,   0f, 0f, 1f,
+         0.5f, -0.5f,  0.5f,   0f, 0f, 1f,
+         0.5f,  0.5f,  0.5f,   0f, 0f, 1f,
+        -0.5f,  0.5f,  0.5f,   0f, 0f, 1f,
 
-        // Back face
-         0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
+        // Back face (-Z)
+         0.5f, -0.5f, -0.5f,   0f, 0f, -1f,
+        -0.5f, -0.5f, -0.5f,   0f, 0f, -1f,
+        -0.5f,  0.5f, -0.5f,   0f, 0f, -1f,
+         0.5f,  0.5f, -0.5f,   0f, 0f, -1f,
 
-        // Left face
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
+        // Left face (-X)
+        -0.5f, -0.5f, -0.5f,  -1f, 0f, 0f,
+        -0.5f, -0.5f,  0.5f,  -1f, 0f, 0f,
+        -0.5f,  0.5f,  0.5f,  -1f, 0f, 0f,
+        -0.5f,  0.5f, -0.5f,  -1f, 0f, 0f,
 
-        // Right face
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
+        // Right face (+X)
+         0.5f, -0.5f,  0.5f,   1f, 0f, 0f,
+         0.5f, -0.5f, -0.5f,   1f, 0f, 0f,
+         0.5f,  0.5f, -0.5f,   1f, 0f, 0f,
+         0.5f,  0.5f,  0.5f,   1f, 0f, 0f,
 
-        // Top face
-        -0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
+        // Top face (+Y)
+        -0.5f,  0.5f,  0.5f,   0f, 1f, 0f,
+         0.5f,  0.5f,  0.5f,   0f, 1f, 0f,
+         0.5f,  0.5f, -0.5f,   0f, 1f, 0f,
+        -0.5f,  0.5f, -0.5f,   0f, 1f, 0f,
 
-        // Bottom face
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
+        // Bottom face (-Y)
+        -0.5f, -0.5f, -0.5f,   0f, -1f, 0f,
+         0.5f, -0.5f, -0.5f,   0f, -1f, 0f,
+         0.5f, -0.5f,  0.5f,   0f, -1f, 0f,
+        -0.5f, -0.5f,  0.5f,   0f, -1f, 0f,
     };
 
     private static readonly uint[] CubeIndices =
@@ -133,3 +164,4 @@ public class Renderer
         20, 21, 22, 22, 23, 20,  // bottom
     };
 }
+

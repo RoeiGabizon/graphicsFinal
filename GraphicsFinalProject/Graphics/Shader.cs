@@ -72,6 +72,18 @@ public class Shader : IDisposable
         GL.Uniform3(location, value.X, value.Y, value.Z);
     }
 
+    public void SetMatrix3(string name, Matrix3 matrix)
+    {
+        int location = GL.GetUniformLocation(Handle, name);
+        GL.UniformMatrix3(location, false, ref matrix);
+    }
+
+    public void SetFloat(string name, float value)
+    {
+        int location = GL.GetUniformLocation(Handle, name);
+        GL.Uniform1(location, value);
+    }
+
     public void Dispose()
     {
         GL.DeleteProgram(Handle);
