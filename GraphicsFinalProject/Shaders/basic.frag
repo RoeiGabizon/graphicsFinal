@@ -9,6 +9,8 @@ in vec2 vTexCoord;
 uniform vec3 uColor;
 uniform bool uUseTexture;
 uniform sampler2D uTexture;
+uniform bool uShadowPass;
+uniform float uAlpha;
 uniform float uSpecularStrength;
 uniform float uShininess;
 
@@ -35,6 +37,12 @@ out vec4 FragColor;
 
 void main()
 {
+    if (uShadowPass)
+    {
+        FragColor = vec4(0.01, 0.01, 0.015, uAlpha);
+        return;
+    }
+
     vec3 normal = normalize(vNormal);
 
     // Ambient: a small constant amount of light so nothing is ever fully

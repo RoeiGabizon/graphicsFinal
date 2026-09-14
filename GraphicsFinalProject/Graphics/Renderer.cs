@@ -91,7 +91,7 @@ public class Renderer
         }
     }
 
-    public void Render(float deltaTime, Camera camera, Robot robot, bool spotlightEnabled)
+    public void Render(float deltaTime, Camera camera, Robot robot, bool spotlightEnabled, bool shadowsEnabled)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -130,9 +130,63 @@ public class Renderer
         _shader.SetFloat("uAmbientStrength", AmbientIntensity);
         _shader.SetFloat("uSpecularStrength", _material.SpecularStrength);
         _shader.SetFloat("uShininess", _material.Shininess);
+        _shader.SetInt("uShadowPass", 0);
+        _shader.SetFloat("uAlpha", 1.0f);
 
         _corridor.Draw(DrawCube);
+        if (shadowsEnabled)
+        {
+            DrawRobotShadow(robot);
+        }
         robot.Draw(DrawCube);
+    }
+
+    private void DrawRobotShadow(Robot robot)
+    {
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        GL.DepthMask(false);
+
+        Matrix4 shadowMatrix = CreateFloorShadowMatrix(_ceilingLights[0].Position);
+        robot.Draw((model, _, _) => DrawShadowCube(model * shadowMatrix));
+
+        GL.DepthMask(true);
+        GL.Disable(EnableCap.Blend);
+        _shader!.SetInt("uShadowPass", 0);
+    }
+
+    private void DrawShadowCube(Matrix4 model)
+    {
+        _shader!.SetMatrix4("uModel", model);
+        _shader.SetInt("uUseTexture", 0);
+        _shader.SetInt("uShadowPass", 1);
+        _shader.SetFloat("uAlpha", 0.45f);
+        // The projected shadow matrix is intentionally singular, so the
+        // normal matrix is irrelevant during this unlit shadow pass.
+        _shader.SetMatrix3("uNormalMatrix", Matrix3.Identity);
+        _cubeMesh!.Draw();
+    }
+
+    /// <summary>
+    /// Creates a planar projection onto y = 0 using the first ceiling light.
+    /// The matrix is transposed because the rest of this project composes
+    /// transforms in OpenTK's established row-style order. This is only a
+    /// floor shadow and is not a general-purpose shadow solution.
+    /// </summary>
+    private static Matrix4 CreateFloorShadowMatrix(Vector3 lightPosition)
+    {
+        Vector4 light = new(lightPosition.X, lightPosition.Y, lightPosition.Z, 1.0f);
+        Vector4 plane = new(0.0f, 1.0f, 0.0f, 0.0f);
+        float dot = Vector4.Dot(plane, light);
+
+        Matrix4 columnStyle = new Matrix4(
+            dot - light.X * plane.X, -light.X * plane.Y, -light.X * plane.Z, -light.X * plane.W,
+            -light.Y * plane.X, dot - light.Y * plane.Y, -light.Y * plane.Z, -light.Y * plane.W,
+            -light.Z * plane.X, -light.Z * plane.Y, dot - light.Z * plane.Z, -light.Z * plane.W,
+            -light.W * plane.X, -light.W * plane.Y, -light.W * plane.Z, dot - light.W * plane.W);
+
+        return Matrix4.Transpose(columnStyle)
+            * Matrix4.CreateTranslation(0.0f, 0.01f, 0.0f);
     }
 
     /// <summary>
