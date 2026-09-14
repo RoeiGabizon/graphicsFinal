@@ -86,11 +86,12 @@ public class MainForm : Form
         _glControl.MouseUp += GlControl_MouseUp;
         _glControl.MouseMove += GlControl_MouseMove;
         _glControl.MouseWheel += GlControl_MouseWheel;
+        _glControl.Click += (_, _) => _glControl.Focus();
 
         _controlPanel = new Panel
         {
             Dock = DockStyle.Right,
-            Width = 220,
+            Width = 330,
             BackColor = SystemColors.Control,
         };
 
@@ -110,6 +111,28 @@ public class MainForm : Form
 
         // Drive continuous redraws for the animation loop.
         Application.Idle += (_, _) => _glControl.Invalidate();
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        Keys key = keyData & Keys.KeyCode;
+        switch (key)
+        {
+            case Keys.Up:
+            case Keys.Down:
+            case Keys.Left:
+            case Keys.Right:
+            case Keys.W:
+            case Keys.S:
+            case Keys.A:
+            case Keys.D:
+            case Keys.Q:
+            case Keys.E:
+                _pressedKeys.Add(key);
+                return true;
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     private void GlControl_Load(object? sender, EventArgs e)
@@ -202,7 +225,7 @@ public class MainForm : Form
         {
             Text = "Projection",
             Location = new Point(8, y),
-            Size = new Size(198, 78),
+            Size = new Size(268, 78),
         };
         _perspectiveRadio = new RadioButton
         {
@@ -227,32 +250,32 @@ public class MainForm : Form
         {
             Text = "Lighting",
             Location = new Point(8, y),
-            Size = new Size(198, 190),
+            Size = new Size(268, 205),
         };
-        TrackBar lightTrackBar = CreateTrackBar(0, 30, 12, new Point(10, 28));
-        TrackBar ambientTrackBar = CreateTrackBar(0, 100, 25, new Point(10, 84));
+        TrackBar lightTrackBar = CreateTrackBar(0, 30, 12, new Point(10, 28), 230);
+        TrackBar ambientTrackBar = CreateTrackBar(0, 100, 25, new Point(10, 98), 230);
         lightingGroup.Controls.Add(new Label { Text = "Ceiling Light Intensity", Location = new Point(10, 10), AutoSize = true });
         lightingGroup.Controls.Add(lightTrackBar);
-        lightingGroup.Controls.Add(new Label { Text = "Ambient Scene Light", Location = new Point(10, 66), AutoSize = true });
+        lightingGroup.Controls.Add(new Label { Text = "Ambient Scene Light", Location = new Point(10, 80), AutoSize = true });
         lightingGroup.Controls.Add(ambientTrackBar);
-        _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", Location = new Point(10, 138), AutoSize = true, Checked = true };
+        _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", Location = new Point(10, 160), AutoSize = true, Checked = true };
         lightingGroup.Controls.Add(_spotlightCheckBox);
         lightTrackBar.Scroll += (_, _) => _renderer.MainLightIntensity = lightTrackBar.Value / 10.0f;
         ambientTrackBar.Scroll += (_, _) => _renderer.AmbientIntensity = ambientTrackBar.Value / 100.0f;
         _spotlightCheckBox.CheckedChanged += (_, _) => _spotlightEnabled = _spotlightCheckBox.Checked;
         _controlPanel.Controls.Add(lightingGroup);
-        y += 198;
+        y += 213;
 
         GroupBox robotGroup = new()
         {
             Text = "Robot",
             Location = new Point(8, y),
-            Size = new Size(198, 175),
+            Size = new Size(268, 340),
         };
         ComboBox appearanceCombo = new()
         {
             Location = new Point(10, 28),
-            Width = 170,
+            Width = 230,
             DropDownStyle = ComboBoxStyle.DropDownList,
         };
         appearanceCombo.Items.AddRange(new object[] { "Metallic / Default", "Red", "Blue" });
@@ -264,11 +287,11 @@ public class MainForm : Form
             _walkingAnimationEnabled = _walkingCheckBox.Checked;
             _armPoseTrackBar.Enabled = !_walkingAnimationEnabled;
         };
-        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 132));
+        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 128), 230);
         scaleTrackBar.Scroll += (_, _) => _robot.Scale = scaleTrackBar.Value / 10.0f;
-        _headRotationTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 188));
+        _headRotationTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 200), 230);
         _headRotationTrackBar.Scroll += (_, _) => _robot.HeadAngle = _headRotationTrackBar.Value;
-        _armPoseTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 244));
+        _armPoseTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 272), 230);
         _armPoseTrackBar.Enabled = false;
         _armPoseTrackBar.Scroll += (_, _) =>
         {
@@ -278,21 +301,20 @@ public class MainForm : Form
         robotGroup.Controls.Add(new Label { Text = "Robot Appearance", Location = new Point(10, 10), AutoSize = true });
         robotGroup.Controls.Add(appearanceCombo);
         robotGroup.Controls.Add(_walkingCheckBox);
-        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 116), AutoSize = true });
+        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 112), AutoSize = true });
         robotGroup.Controls.Add(scaleTrackBar);
-        robotGroup.Controls.Add(new Label { Text = "Head Rotation", Location = new Point(10, 172), AutoSize = true });
+        robotGroup.Controls.Add(new Label { Text = "Head Rotation", Location = new Point(10, 184), AutoSize = true });
         robotGroup.Controls.Add(_headRotationTrackBar);
-        robotGroup.Controls.Add(new Label { Text = "Manual Arm Pose (walking off)", Location = new Point(10, 228), AutoSize = true });
+        robotGroup.Controls.Add(new Label { Text = "Manual Arm Pose (walking off)", Location = new Point(10, 256), AutoSize = true });
         robotGroup.Controls.Add(_armPoseTrackBar);
-        robotGroup.Height = 295;
         _controlPanel.Controls.Add(robotGroup);
-        y += 303;
+        y += 348;
 
         GroupBox renderingGroup = new()
         {
             Text = "Rendering",
             Location = new Point(8, y),
-            Size = new Size(198, 105),
+            Size = new Size(268, 105),
         };
         CheckBox texturesCheckBox = new() { Text = "Textures", Location = new Point(10, 22), AutoSize = true, Checked = true };
         _shadowsCheckBox = new() { Text = "Planar Shadows", Location = new Point(10, 46), AutoSize = true, Checked = true };
@@ -306,22 +328,21 @@ public class MainForm : Form
         {
             Text = "Camera",
             Location = new Point(8, y),
-            Size = new Size(198, 92),
+            Size = new Size(268, 148),
         };
-        _fovTrackBar = CreateTrackBar(20, 90, 60, new Point(10, 28));
+        _fovTrackBar = CreateTrackBar(20, 90, 60, new Point(10, 28), 230);
         _fovTrackBar.Scroll += (_, _) => _camera.Fov = _fovTrackBar.Value;
-        _orthographicSizeTrackBar = CreateTrackBar(4, 30, 10, new Point(10, 84));
+        _orthographicSizeTrackBar = CreateTrackBar(4, 30, 10, new Point(10, 92), 230);
         _orthographicSizeTrackBar.Scroll += (_, _) => _camera.OrthographicSize = _orthographicSizeTrackBar.Value;
         _orthographicSizeTrackBar.Enabled = false;
         cameraGroup.Controls.Add(new Label { Text = "Field of View", Location = new Point(10, 10), AutoSize = true });
         cameraGroup.Controls.Add(_fovTrackBar);
         cameraGroup.Controls.Add(new Label { Text = "Orthographic Size", Location = new Point(10, 66), AutoSize = true });
         cameraGroup.Controls.Add(_orthographicSizeTrackBar);
-        cameraGroup.Height = 148;
         _controlPanel.Controls.Add(cameraGroup);
     }
 
-    private static TrackBar CreateTrackBar(int minimum, int maximum, int value, Point location)
+    private static TrackBar CreateTrackBar(int minimum, int maximum, int value, Point location, int width = 170)
     {
         return new TrackBar
         {
@@ -330,7 +351,7 @@ public class MainForm : Form
             Value = value,
             TickFrequency = Math.Max(1, (maximum - minimum) / 5),
             Location = location,
-            Width = 170,
+            Width = width,
         };
     }
 
