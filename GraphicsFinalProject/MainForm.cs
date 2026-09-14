@@ -48,6 +48,8 @@ public class MainForm : Form
     private CheckBox _shadowsCheckBox = null!;
     private CheckBox _reflectionsCheckBox = null!;
     private TrackBar _fovTrackBar = null!;
+    private TrackBar _headRotationTrackBar = null!;
+    private TrackBar _armPoseTrackBar = null!;
 
     public MainForm()
     {
@@ -255,16 +257,34 @@ public class MainForm : Form
         appearanceCombo.SelectedIndex = 0;
         appearanceCombo.SelectedIndexChanged += (_, _) => _renderer.SetRobotAppearance(appearanceCombo.SelectedIndex);
         _walkingCheckBox = new CheckBox { Text = "Walking Animation", Location = new Point(10, 62), AutoSize = true, Checked = true };
-        _walkingCheckBox.CheckedChanged += (_, _) => _walkingAnimationEnabled = _walkingCheckBox.Checked;
-        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 110));
+        _walkingCheckBox.CheckedChanged += (_, _) =>
+        {
+            _walkingAnimationEnabled = _walkingCheckBox.Checked;
+            _armPoseTrackBar.Enabled = !_walkingAnimationEnabled;
+        };
+        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 132));
         scaleTrackBar.Scroll += (_, _) => _robot.Scale = scaleTrackBar.Value / 10.0f;
+        _headRotationTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 188));
+        _headRotationTrackBar.Scroll += (_, _) => _robot.HeadAngle = _headRotationTrackBar.Value;
+        _armPoseTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 244));
+        _armPoseTrackBar.Enabled = false;
+        _armPoseTrackBar.Scroll += (_, _) =>
+        {
+            _robot.LeftArmAngle = _armPoseTrackBar.Value;
+            _robot.RightArmAngle = -_armPoseTrackBar.Value;
+        };
         robotGroup.Controls.Add(new Label { Text = "Robot Appearance", Location = new Point(10, 10), AutoSize = true });
         robotGroup.Controls.Add(appearanceCombo);
         robotGroup.Controls.Add(_walkingCheckBox);
-        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 94), AutoSize = true });
+        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 116), AutoSize = true });
         robotGroup.Controls.Add(scaleTrackBar);
+        robotGroup.Controls.Add(new Label { Text = "Head Rotation", Location = new Point(10, 172), AutoSize = true });
+        robotGroup.Controls.Add(_headRotationTrackBar);
+        robotGroup.Controls.Add(new Label { Text = "Arm Pose (walking off)", Location = new Point(10, 228), AutoSize = true });
+        robotGroup.Controls.Add(_armPoseTrackBar);
+        robotGroup.Height = 295;
         _controlPanel.Controls.Add(robotGroup);
-        y += 183;
+        y += 303;
 
         GroupBox renderingGroup = new()
         {
