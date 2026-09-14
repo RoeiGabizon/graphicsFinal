@@ -91,7 +91,7 @@ public class Renderer
         }
     }
 
-    public void Render(float deltaTime, Camera camera, Robot robot, bool spotlightEnabled, bool shadowsEnabled)
+    public void Render(float deltaTime, Camera camera, Robot robot, bool spotlightEnabled, bool shadowsEnabled, bool reflectionsEnabled)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -131,6 +131,7 @@ public class Renderer
         _shader.SetFloat("uSpecularStrength", _material.SpecularStrength);
         _shader.SetFloat("uShininess", _material.Shininess);
         _shader.SetInt("uShadowPass", 0);
+        _shader.SetInt("uReflectionPass", 0);
         _shader.SetFloat("uAlpha", 1.0f);
 
         _corridor.Draw(DrawCube);
@@ -139,6 +140,10 @@ public class Renderer
             DrawRobotShadow(robot);
         }
         robot.Draw(DrawCube);
+        if (reflectionsEnabled)
+        {
+            DrawRobotReflection(robot);
+        }
     }
 
     private void DrawRobotShadow(Robot robot)
@@ -163,6 +168,44 @@ public class Renderer
         _shader.SetFloat("uAlpha", 0.45f);
         // The projected shadow matrix is intentionally singular, so the
         // normal matrix is irrelevant during this unlit shadow pass.
+        _shader.SetMatrix3("uNormalMatrix", Matrix3.Identity);
+        _cubeMesh!.Draw();
+    }
+
+    private void DrawRobotReflection(Robot robot)
+    {
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        GL.DepthMask(false);
+
+        Matrix4 reflectionMatrix =
+            Matrix4.CreateScale(1.0f, -1.0f, 1.0f) *
+            Matrix4.CreateTranslation(0.0f, 0.02f, 0.0f);
+        robot.Draw((model, color, textureKind) =>
+            DrawReflectionCube(model * reflectionMatrix, color, textureKind));
+
+        GL.DepthMask(true);
+        GL.Disable(EnableCap.Blend);
+        _shader!.SetInt("uReflectionPass", 0);
+    }
+
+    private void DrawReflectionCube(Matrix4 model, Vector3 color, TextureKind textureKind)
+    {
+        _shader!.SetMatrix4("uModel", model);
+        if (textureKind == TextureKind.Robot)
+        {
+            color *= RobotAppearanceTints[_robotAppearance];
+        }
+        _shader.SetVector3("uColor", color);
+        Texture? texture = TexturesEnabled && textureKind == TextureKind.Robot
+            ? _robotTexture
+            : null;
+        _shader.SetInt("uUseTexture", texture is null ? 0 : 1);
+        _shader.SetInt("uTexture", 0);
+        texture?.Bind(TextureUnit.Texture0);
+        _shader.SetInt("uShadowPass", 0);
+        _shader.SetInt("uReflectionPass", 1);
+        _shader.SetFloat("uAlpha", 0.28f);
         _shader.SetMatrix3("uNormalMatrix", Matrix3.Identity);
         _cubeMesh!.Draw();
     }

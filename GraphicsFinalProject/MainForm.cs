@@ -46,6 +46,7 @@ public class MainForm : Form
     private CheckBox _spotlightCheckBox = null!;
     private CheckBox _walkingCheckBox = null!;
     private CheckBox _shadowsCheckBox = null!;
+    private CheckBox _reflectionsCheckBox = null!;
     private TrackBar _fovTrackBar = null!;
 
     public MainForm()
@@ -184,7 +185,7 @@ public class MainForm : Form
             rotateRight: _pressedKeys.Contains(Keys.Right),
             animate: _walkingAnimationEnabled && !_isAnimationPaused);
 
-        _renderer.Render(deltaTime, _camera, _robot, _spotlightEnabled, _shadowsCheckBox.Checked);
+        _renderer.Render(deltaTime, _camera, _robot, _spotlightEnabled, _shadowsCheckBox.Checked, _reflectionsCheckBox.Checked);
         _glControl.SwapBuffers();
     }
 
@@ -273,9 +274,9 @@ public class MainForm : Form
         };
         CheckBox texturesCheckBox = new() { Text = "Textures", Location = new Point(10, 22), AutoSize = true, Checked = true };
         _shadowsCheckBox = new() { Text = "Planar Shadows", Location = new Point(10, 46), AutoSize = true, Checked = true };
-        CheckBox reflectionsCheckBox = new() { Text = "Reflections (not implemented)", Location = new Point(10, 70), AutoSize = true, Enabled = false };
+        _reflectionsCheckBox = new() { Text = "Planar Reflections", Location = new Point(10, 70), AutoSize = true, Checked = true };
         texturesCheckBox.CheckedChanged += (_, _) => _renderer.TexturesEnabled = texturesCheckBox.Checked;
-        renderingGroup.Controls.AddRange(new Control[] { texturesCheckBox, _shadowsCheckBox, reflectionsCheckBox });
+        renderingGroup.Controls.AddRange(new Control[] { texturesCheckBox, _shadowsCheckBox, _reflectionsCheckBox });
         _controlPanel.Controls.Add(renderingGroup);
         y += 113;
 

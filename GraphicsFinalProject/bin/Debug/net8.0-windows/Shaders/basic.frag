@@ -10,6 +10,7 @@ uniform vec3 uColor;
 uniform bool uUseTexture;
 uniform sampler2D uTexture;
 uniform bool uShadowPass;
+uniform bool uReflectionPass;
 uniform float uAlpha;
 uniform float uSpecularStrength;
 uniform float uShininess;
@@ -37,9 +38,17 @@ out vec4 FragColor;
 
 void main()
 {
+    vec3 baseColor = uUseTexture ? texture(uTexture, vTexCoord).rgb * uColor : uColor;
+
     if (uShadowPass)
     {
         FragColor = vec4(0.01, 0.01, 0.015, uAlpha);
+        return;
+    }
+
+    if (uReflectionPass)
+    {
+        FragColor = vec4(baseColor * vec3(0.35, 0.45, 0.60), uAlpha);
         return;
     }
 
@@ -48,7 +57,6 @@ void main()
     // Ambient: a small constant amount of light so nothing is ever fully
     // black, even facing away from the light. Kept fairly strong so the
     // corridor stays easy to see during the demo.
-    vec3 baseColor = uUseTexture ? texture(uTexture, vTexCoord).rgb * uColor : uColor;
     vec3 ambientResult = vec3(uAmbientStrength) * baseColor;
     vec3 diffuseResult = vec3(0.0);
     vec3 specularResult = vec3(0.0);
