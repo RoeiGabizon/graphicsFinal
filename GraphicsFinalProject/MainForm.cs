@@ -40,6 +40,12 @@ public class MainForm : Form
     private bool _lWasDown;
     private bool _tWasDown;
     private bool _pWasDown;
+    private bool _walkingAnimationEnabled = true;
+    private RadioButton _perspectiveRadio = null!;
+    private RadioButton _orthographicRadio = null!;
+    private CheckBox _spotlightCheckBox = null!;
+    private CheckBox _walkingCheckBox = null!;
+    private TrackBar _fovTrackBar = null!;
 
     public MainForm()
     {
@@ -90,6 +96,7 @@ public class MainForm : Form
             Location = new Point(10, 10),
         };
         _controlPanel.Controls.Add(_titleLabel);
+        CreateControlPanel();
 
         // Add GLControl first, then the panel, so the panel keeps its
         // fixed width and the GLControl fills the remaining space.
@@ -146,6 +153,7 @@ public class MainForm : Form
         if (lIsDown && !_lWasDown)
         {
             _spotlightEnabled = !_spotlightEnabled;
+            _spotlightCheckBox.Checked = _spotlightEnabled;
         }
         _lWasDown = lIsDown;
 
@@ -162,6 +170,8 @@ public class MainForm : Form
             _camera.ProjectionMode = _camera.ProjectionMode == ProjectionMode.Perspective
                 ? ProjectionMode.Orthographic
                 : ProjectionMode.Perspective;
+            _perspectiveRadio.Checked = _camera.ProjectionMode == ProjectionMode.Perspective;
+            _orthographicRadio.Checked = _camera.ProjectionMode == ProjectionMode.Orthographic;
         }
         _pWasDown = pIsDown;
 
@@ -171,10 +181,142 @@ public class MainForm : Form
             moveBackward: _pressedKeys.Contains(Keys.Down),
             rotateLeft: _pressedKeys.Contains(Keys.Left),
             rotateRight: _pressedKeys.Contains(Keys.Right),
-            animate: !_isAnimationPaused);
+            animate: _walkingAnimationEnabled && !_isAnimationPaused);
 
         _renderer.Render(deltaTime, _camera, _robot, _spotlightEnabled);
         _glControl.SwapBuffers();
+    }
+
+    private void CreateControlPanel()
+    {
+        _controlPanel.AutoScroll = true;
+        int y = 40;
+
+        GroupBox projectionGroup = new()
+        {
+            Text = "Projection",
+            Location = new Point(8, y),
+            Size = new Size(198, 78),
+        };
+        _perspectiveRadio = new RadioButton
+        {
+            Text = "Perspective",
+            Location = new Point(10, 22),
+            AutoSize = true,
+            Checked = true,
+        };
+        _orthographicRadio = new RadioButton
+        {
+            Text = "Orthographic",
+            Location = new Point(10, 46),
+            AutoSize = true,
+        };
+        _perspectiveRadio.CheckedChanged += (_, _) => SetProjectionFromControls();
+        _orthographicRadio.CheckedChanged += (_, _) => SetProjectionFromControls();
+        projectionGroup.Controls.AddRange(new Control[] { _perspectiveRadio, _orthographicRadio });
+        _controlPanel.Controls.Add(projectionGroup);
+        y += 86;
+
+        GroupBox lightingGroup = new()
+        {
+            Text = "Lighting",
+            Location = new Point(8, y),
+            Size = new Size(198, 190),
+        };
+        TrackBar lightTrackBar = CreateTrackBar(0, 30, 12, new Point(10, 28));
+        TrackBar ambientTrackBar = CreateTrackBar(0, 100, 25, new Point(10, 84));
+        lightingGroup.Controls.Add(new Label { Text = "Main Light Intensity", Location = new Point(10, 10), AutoSize = true });
+        lightingGroup.Controls.Add(lightTrackBar);
+        lightingGroup.Controls.Add(new Label { Text = "Ambient Intensity", Location = new Point(10, 66), AutoSize = true });
+        lightingGroup.Controls.Add(ambientTrackBar);
+        _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", Location = new Point(10, 138), AutoSize = true, Checked = true };
+        lightingGroup.Controls.Add(_spotlightCheckBox);
+        lightTrackBar.Scroll += (_, _) => _renderer.MainLightIntensity = lightTrackBar.Value / 10.0f;
+        ambientTrackBar.Scroll += (_, _) => _renderer.AmbientIntensity = ambientTrackBar.Value / 100.0f;
+        _spotlightCheckBox.CheckedChanged += (_, _) => _spotlightEnabled = _spotlightCheckBox.Checked;
+        _controlPanel.Controls.Add(lightingGroup);
+        y += 198;
+
+        GroupBox robotGroup = new()
+        {
+            Text = "Robot",
+            Location = new Point(8, y),
+            Size = new Size(198, 175),
+        };
+        ComboBox appearanceCombo = new()
+        {
+            Location = new Point(10, 28),
+            Width = 170,
+            DropDownStyle = ComboBoxStyle.DropDownList,
+        };
+        appearanceCombo.Items.AddRange(new object[] { "Metallic / Default", "Red", "Blue" });
+        appearanceCombo.SelectedIndex = 0;
+        appearanceCombo.SelectedIndexChanged += (_, _) => _renderer.SetRobotAppearance(appearanceCombo.SelectedIndex);
+        _walkingCheckBox = new CheckBox { Text = "Walking Animation", Location = new Point(10, 62), AutoSize = true, Checked = true };
+        _walkingCheckBox.CheckedChanged += (_, _) => _walkingAnimationEnabled = _walkingCheckBox.Checked;
+        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 110));
+        scaleTrackBar.Scroll += (_, _) => _robot.Scale = scaleTrackBar.Value / 10.0f;
+        robotGroup.Controls.Add(new Label { Text = "Robot Appearance", Location = new Point(10, 10), AutoSize = true });
+        robotGroup.Controls.Add(appearanceCombo);
+        robotGroup.Controls.Add(_walkingCheckBox);
+        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 94), AutoSize = true });
+        robotGroup.Controls.Add(scaleTrackBar);
+        _controlPanel.Controls.Add(robotGroup);
+        y += 183;
+
+        GroupBox renderingGroup = new()
+        {
+            Text = "Rendering",
+            Location = new Point(8, y),
+            Size = new Size(198, 105),
+        };
+        CheckBox texturesCheckBox = new() { Text = "Textures", Location = new Point(10, 22), AutoSize = true, Checked = true };
+        CheckBox shadowsCheckBox = new() { Text = "Shadows (not implemented)", Location = new Point(10, 46), AutoSize = true, Enabled = false };
+        CheckBox reflectionsCheckBox = new() { Text = "Reflections (not implemented)", Location = new Point(10, 70), AutoSize = true, Enabled = false };
+        texturesCheckBox.CheckedChanged += (_, _) => _renderer.TexturesEnabled = texturesCheckBox.Checked;
+        renderingGroup.Controls.AddRange(new Control[] { texturesCheckBox, shadowsCheckBox, reflectionsCheckBox });
+        _controlPanel.Controls.Add(renderingGroup);
+        y += 113;
+
+        GroupBox cameraGroup = new()
+        {
+            Text = "Camera",
+            Location = new Point(8, y),
+            Size = new Size(198, 92),
+        };
+        _fovTrackBar = CreateTrackBar(20, 90, 60, new Point(10, 28));
+        _fovTrackBar.Scroll += (_, _) => _camera.Fov = _fovTrackBar.Value;
+        cameraGroup.Controls.Add(new Label { Text = "Field of View", Location = new Point(10, 10), AutoSize = true });
+        cameraGroup.Controls.Add(_fovTrackBar);
+        _controlPanel.Controls.Add(cameraGroup);
+    }
+
+    private static TrackBar CreateTrackBar(int minimum, int maximum, int value, Point location)
+    {
+        return new TrackBar
+        {
+            Minimum = minimum,
+            Maximum = maximum,
+            Value = value,
+            TickFrequency = Math.Max(1, (maximum - minimum) / 5),
+            Location = location,
+            Width = 170,
+        };
+    }
+
+    private void SetProjectionFromControls()
+    {
+        if (_perspectiveRadio.Checked)
+        {
+            _camera.ProjectionMode = ProjectionMode.Perspective;
+        }
+        else if (_orthographicRadio.Checked)
+        {
+            _camera.ProjectionMode = ProjectionMode.Orthographic;
+        }
+
+        _fovTrackBar.Enabled = _camera.ProjectionMode == ProjectionMode.Perspective;
+        _glControl.Invalidate();
     }
 
     private void GlControl_KeyDown(object? sender, KeyEventArgs e)

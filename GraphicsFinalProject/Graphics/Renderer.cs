@@ -23,6 +23,19 @@ public class Renderer
     private Texture? _floorTexture;
     private Texture? _robotTexture;
     private int _robotAppearance;
+    public bool TexturesEnabled { get; set; } = true;
+    public float AmbientIntensity { get; set; } = 0.25f;
+    public float MainLightIntensity
+    {
+        get => _ceilingLights[0].Intensity;
+        set
+        {
+            foreach (PointLight light in _ceilingLights)
+            {
+                light.Intensity = value;
+            }
+        }
+    }
     private static readonly Vector3[] RobotAppearanceTints =
     {
         Vector3.One,
@@ -40,10 +53,6 @@ public class Renderer
     };
 
     private readonly Material _material = Material.Default;
-
-    // Kept fairly strong (per Phase 6 instructions) so the scene stays easy
-    // to see and demonstrate even in areas the point light doesn't reach well.
-    private const float AmbientStrength = 0.25f;
 
     public void Initialize()
     {
@@ -66,6 +75,11 @@ public class Renderer
     public void CycleRobotAppearance()
     {
         _robotAppearance = (_robotAppearance + 1) % RobotAppearanceTints.Length;
+    }
+
+    public void SetRobotAppearance(int appearance)
+    {
+        _robotAppearance = Math.Clamp(appearance, 0, RobotAppearanceTints.Length - 1);
     }
 
     public void Resize(int width, int height)
@@ -113,7 +127,7 @@ public class Renderer
         _shader.SetFloat("uSpotlightOuterCutoff", MathF.Cos(MathHelper.DegreesToRadians(25.0f)));
         _shader.SetFloat("uSpotlightIntensity", 2.0f);
         _shader.SetVector3("uViewPosition", camera.Position);
-        _shader.SetFloat("uAmbientStrength", AmbientStrength);
+        _shader.SetFloat("uAmbientStrength", AmbientIntensity);
         _shader.SetFloat("uSpecularStrength", _material.SpecularStrength);
         _shader.SetFloat("uShininess", _material.Shininess);
 
@@ -135,13 +149,13 @@ public class Renderer
         }
         _shader.SetVector3("uColor", color);
 
-        Texture? texture = textureKind switch
+        Texture? texture = TexturesEnabled ? textureKind switch
         {
             TextureKind.CorridorWall => _corridorTexture,
             TextureKind.Floor => _floorTexture,
             TextureKind.Robot => _robotTexture,
             _ => null,
-        };
+        } : null;
         _shader.SetInt("uUseTexture", texture is null ? 0 : 1);
         _shader.SetInt("uTexture", 0);
         texture?.Bind(TextureUnit.Texture0);
