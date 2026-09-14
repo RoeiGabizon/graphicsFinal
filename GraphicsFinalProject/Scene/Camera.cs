@@ -47,6 +47,18 @@ public class Camera
     /// <summary>Visible vertical size when using orthographic projection.</summary>
     public float OrthographicSize { get; set; } = 10.0f;
 
+    public void AdjustZoom(float amount)
+    {
+        if (ProjectionMode == ProjectionMode.Orthographic)
+        {
+            OrthographicSize = MathHelper.Clamp(OrthographicSize + amount, 4.0f, 30.0f);
+        }
+        else
+        {
+            Fov = MathHelper.Clamp(Fov + amount, MinFovDegrees, MaxFovDegrees);
+        }
+    }
+
     /// <summary>Movement speed in world units per second.</summary>
     public float MovementSpeed { get; set; } = 3.0f;
 
@@ -137,12 +149,11 @@ public class Camera
     }
 
     /// <summary>
-    /// Applies mouse wheel scroll to zoom (by narrowing/widening the FOV).
+    /// Applies mouse wheel scroll to the active projection's zoom parameter.
     /// </summary>
     public void ProcessMouseWheel(float wheelDelta)
     {
-        Fov -= wheelDelta;
-        Fov = MathHelper.Clamp(Fov, MinFovDegrees, MaxFovDegrees);
+        AdjustZoom(-wheelDelta);
     }
 
     private void UpdateVectors()

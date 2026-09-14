@@ -93,7 +93,7 @@ public class Robot
     /// If false, movement still happens but limb animation is frozen in
     /// its current pose (used for the pause/resume control).
     /// </param>
-    public void Update(float deltaTime, bool moveForward, bool moveBackward, bool rotateLeft, bool rotateRight, bool animate)
+    public void Update(float deltaTime, bool moveForward, bool moveBackward, bool rotateLeft, bool rotateRight, bool animate, bool manualPose)
     {
         if (rotateLeft)
         {
@@ -132,7 +132,7 @@ public class Robot
             LeftLegAngle = -swing;
             RightLegAngle = swing;
         }
-        else if (!isWalking)
+        else if (!isWalking && !manualPose)
         {
             // Stopped: ease all limbs back toward neutral (0 degrees)
             // instead of snapping, so the stop looks smooth. If "animate"

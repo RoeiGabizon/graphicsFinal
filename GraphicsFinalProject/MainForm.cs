@@ -48,6 +48,7 @@ public class MainForm : Form
     private CheckBox _shadowsCheckBox = null!;
     private CheckBox _reflectionsCheckBox = null!;
     private TrackBar _fovTrackBar = null!;
+    private TrackBar _orthographicSizeTrackBar = null!;
     private TrackBar _headRotationTrackBar = null!;
     private TrackBar _armPoseTrackBar = null!;
 
@@ -185,7 +186,8 @@ public class MainForm : Form
             moveBackward: _pressedKeys.Contains(Keys.Down),
             rotateLeft: _pressedKeys.Contains(Keys.Left),
             rotateRight: _pressedKeys.Contains(Keys.Right),
-            animate: _walkingAnimationEnabled && !_isAnimationPaused);
+            animate: _walkingAnimationEnabled && !_isAnimationPaused,
+            manualPose: !_walkingAnimationEnabled);
 
         _renderer.Render(deltaTime, _camera, _robot, _spotlightEnabled, _shadowsCheckBox.Checked, _reflectionsCheckBox.Checked);
         _glControl.SwapBuffers();
@@ -308,8 +310,14 @@ public class MainForm : Form
         };
         _fovTrackBar = CreateTrackBar(20, 90, 60, new Point(10, 28));
         _fovTrackBar.Scroll += (_, _) => _camera.Fov = _fovTrackBar.Value;
+        _orthographicSizeTrackBar = CreateTrackBar(4, 30, 10, new Point(10, 84));
+        _orthographicSizeTrackBar.Scroll += (_, _) => _camera.OrthographicSize = _orthographicSizeTrackBar.Value;
+        _orthographicSizeTrackBar.Enabled = false;
         cameraGroup.Controls.Add(new Label { Text = "Field of View", Location = new Point(10, 10), AutoSize = true });
         cameraGroup.Controls.Add(_fovTrackBar);
+        cameraGroup.Controls.Add(new Label { Text = "Orthographic Size", Location = new Point(10, 66), AutoSize = true });
+        cameraGroup.Controls.Add(_orthographicSizeTrackBar);
+        cameraGroup.Height = 148;
         _controlPanel.Controls.Add(cameraGroup);
     }
 
@@ -338,6 +346,7 @@ public class MainForm : Form
         }
 
         _fovTrackBar.Enabled = _camera.ProjectionMode == ProjectionMode.Perspective;
+        _orthographicSizeTrackBar.Enabled = _camera.ProjectionMode == ProjectionMode.Orthographic;
         _glControl.Invalidate();
     }
 

@@ -21,7 +21,7 @@ public class Renderer
     private float _aspectRatio = 1.0f;
     private Texture? _corridorTexture;
     private Texture? _floorTexture;
-    private Texture? _robotTexture;
+    private readonly Texture?[] _robotTextures = new Texture?[3];
     private int _robotAppearance;
     public bool TexturesEnabled { get; set; } = true;
     public float AmbientIntensity { get; set; } = 0.25f;
@@ -69,7 +69,9 @@ public class Renderer
         string textureDir = Path.Combine(AppContext.BaseDirectory, "Assets", "Textures");
         _corridorTexture = Texture.Load(Path.Combine(textureDir, "corridor_wall.png"));
         _floorTexture = Texture.Load(Path.Combine(textureDir, "floor.png"));
-        _robotTexture = Texture.Load(Path.Combine(textureDir, "robot.png"));
+        _robotTextures[0] = Texture.Load(Path.Combine(textureDir, "robot_metal.png"));
+        _robotTextures[1] = Texture.Load(Path.Combine(textureDir, "robot_red.png"));
+        _robotTextures[2] = Texture.Load(Path.Combine(textureDir, "robot_blue.png"));
     }
 
     public void CycleRobotAppearance()
@@ -150,12 +152,17 @@ public class Renderer
     {
         GL.Enable(EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        // The opaque floor has already populated the depth buffer. Disable
+        // depth testing for this simple floor-only overlay so the reflection
+        // remains visible through the floor without a second floor pass.
+        GL.Disable(EnableCap.DepthTest);
         GL.DepthMask(false);
 
         Matrix4 shadowMatrix = CreateFloorShadowMatrix(_ceilingLights[0].Position);
         robot.Draw((model, _, _) => DrawShadowCube(model * shadowMatrix));
 
         GL.DepthMask(true);
+        GL.Enable(EnableCap.DepthTest);
         GL.Disable(EnableCap.Blend);
         _shader!.SetInt("uShadowPass", 0);
     }
@@ -198,7 +205,7 @@ public class Renderer
         }
         _shader.SetVector3("uColor", color);
         Texture? texture = TexturesEnabled && textureKind == TextureKind.Robot
-            ? _robotTexture
+            ? _robotTextures[_robotAppearance]
             : null;
         _shader.SetInt("uUseTexture", texture is null ? 0 : 1);
         _shader.SetInt("uTexture", 0);
@@ -250,7 +257,7 @@ public class Renderer
         {
             TextureKind.CorridorWall => _corridorTexture,
             TextureKind.Floor => _floorTexture,
-            TextureKind.Robot => _robotTexture,
+            TextureKind.Robot => _robotTextures[_robotAppearance],
             _ => null,
         } : null;
         _shader.SetInt("uUseTexture", texture is null ? 0 : 1);
@@ -274,7 +281,10 @@ public class Renderer
         _shader?.Dispose();
         _corridorTexture?.Dispose();
         _floorTexture?.Dispose();
-        _robotTexture?.Dispose();
+        foreach (Texture? texture in _robotTextures)
+        {
+            texture?.Dispose();
+        }
     }
 
     // Unit cube centered at the origin (side length 1). Each vertex has a
