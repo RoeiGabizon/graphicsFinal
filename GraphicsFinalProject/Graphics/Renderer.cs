@@ -20,12 +20,14 @@ public class Renderer
     private Corridor? _corridor;
     private float _aspectRatio = 1.0f;
 
-    // One simple point light for the whole scene, placed roughly in the
-    // middle of the corridor so both the robot and the walls are lit.
-    private readonly PointLight _light = new(
-        position: new Vector3(0f, 3.5f, -10f),
-        color: new Vector3(1.0f, 0.95f, 0.85f),
-        intensity: 1.4f);
+    // A small, fixed set of point lights matching the visible ceiling
+    // fixtures. Keeping the count fixed keeps the shader easy to explain.
+    private readonly PointLight[] _ceilingLights =
+    {
+        new(new Vector3(0f, 4.75f, -7.5f), new Vector3(1.0f, 0.85f, 0.55f), 1.2f),
+        new(new Vector3(0f, 4.75f, -15.0f), new Vector3(1.0f, 0.95f, 0.75f), 1.2f),
+        new(new Vector3(0f, 4.75f, -22.5f), new Vector3(0.75f, 0.85f, 1.0f), 1.2f),
+    };
 
     private readonly Material _material = Material.Default;
 
@@ -56,7 +58,7 @@ public class Renderer
         }
     }
 
-    public void Render(float deltaTime, Camera camera, Robot robot)
+    public void Render(float deltaTime, Camera camera, Robot robot, bool spotlightEnabled)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -72,9 +74,22 @@ public class Renderer
         _shader.SetMatrix4("uView", view);
         _shader.SetMatrix4("uProjection", projection);
 
-        _shader.SetVector3("uLightPosition", _light.Position);
-        _shader.SetVector3("uLightColor", _light.Color);
-        _shader.SetFloat("uLightIntensity", _light.Intensity);
+        _shader.SetInt("uPointLightCount", _ceilingLights.Length);
+        for (int i = 0; i < _ceilingLights.Length; i++)
+        {
+            PointLight light = _ceilingLights[i];
+            _shader.SetVector3($"uPointLightPositions[{i}]", light.Position);
+            _shader.SetVector3($"uPointLightColors[{i}]", light.Color);
+            _shader.SetFloat($"uPointLightIntensities[{i}]", light.Intensity);
+        }
+
+        _shader.SetInt("uSpotlightEnabled", spotlightEnabled ? 1 : 0);
+        _shader.SetVector3("uSpotlightPosition", robot.SpotlightPosition);
+        _shader.SetVector3("uSpotlightDirection", robot.SpotlightDirection);
+        _shader.SetVector3("uSpotlightColor", new Vector3(0.75f, 0.9f, 1.0f));
+        _shader.SetFloat("uSpotlightInnerCutoff", MathF.Cos(MathHelper.DegreesToRadians(12.0f)));
+        _shader.SetFloat("uSpotlightOuterCutoff", MathF.Cos(MathHelper.DegreesToRadians(25.0f)));
+        _shader.SetFloat("uSpotlightIntensity", 2.0f);
         _shader.SetVector3("uViewPosition", camera.Position);
         _shader.SetFloat("uAmbientStrength", AmbientStrength);
         _shader.SetFloat("uSpecularStrength", _material.SpecularStrength);
@@ -164,4 +179,3 @@ public class Renderer
         20, 21, 22, 22, 23, 20,  // bottom
     };
 }
-

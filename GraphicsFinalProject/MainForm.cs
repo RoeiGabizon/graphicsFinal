@@ -36,6 +36,8 @@ public class MainForm : Form
     private Point _lastMousePosition;
     private bool _isAnimationPaused;
     private bool _spaceWasDown;
+    private bool _spotlightEnabled = true;
+    private bool _lWasDown;
 
     public MainForm()
     {
@@ -137,6 +139,13 @@ public class MainForm : Form
         }
         _spaceWasDown = spaceIsDown;
 
+        bool lIsDown = _pressedKeys.Contains(Keys.L);
+        if (lIsDown && !_lWasDown)
+        {
+            _spotlightEnabled = !_spotlightEnabled;
+        }
+        _lWasDown = lIsDown;
+
         _robot.Update(
             deltaTime: deltaTime,
             moveForward: _pressedKeys.Contains(Keys.Up),
@@ -145,7 +154,7 @@ public class MainForm : Form
             rotateRight: _pressedKeys.Contains(Keys.Right),
             animate: !_isAnimationPaused);
 
-        _renderer.Render(deltaTime, _camera, _robot);
+        _renderer.Render(deltaTime, _camera, _robot, _spotlightEnabled);
         _glControl.SwapBuffers();
     }
 

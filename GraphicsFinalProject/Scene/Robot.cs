@@ -49,6 +49,37 @@ public class Robot
         Vector3.TransformVector(Vector3.UnitZ, Matrix4.CreateRotationY(MathHelper.DegreesToRadians(RotationY)));
 
     /// <summary>
+    /// World-space position just in front of the robot's head. It uses the
+    /// same neck/head transform as Draw(), so it follows the robot exactly.
+    /// </summary>
+    public Vector3 SpotlightPosition
+    {
+        get
+        {
+            float neckY = LegLength + TorsoHeight;
+            Matrix4 root = Matrix4.CreateScale(Scale)
+                * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(RotationY))
+                * Matrix4.CreateTranslation(Position);
+            Matrix4 headRotation = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(HeadAngle));
+            Matrix4 neckJoint = Matrix4.CreateTranslation(0.0f, neckY, 0.0f) * root;
+            return Vector3.TransformPosition(
+                new Vector3(0.0f, HeadSize * 0.6f, HeadSize / 2.0f + 0.08f),
+                headRotation * neckJoint);
+        }
+    }
+
+    /// <summary>World-space direction of the head-mounted forward beam.</summary>
+    public Vector3 SpotlightDirection
+    {
+        get
+        {
+            Matrix4 rotation = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(HeadAngle))
+                * Matrix4.CreateRotationY(MathHelper.DegreesToRadians(RotationY));
+            return Vector3.Normalize(Vector3.TransformVector(Vector3.UnitZ, rotation));
+        }
+    }
+
+    /// <summary>
     /// Advances the robot's position/rotation and, if walking, its limb
     /// animation. Called once per frame with the current input state.
     /// </summary>

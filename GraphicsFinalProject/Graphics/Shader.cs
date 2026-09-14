@@ -84,6 +84,12 @@ public class Shader : IDisposable
         GL.Uniform1(location, value);
     }
 
+    public void SetInt(string name, int value)
+    {
+        int location = GL.GetUniformLocation(Handle, name);
+        GL.Uniform1(location, value);
+    }
+
     public void Dispose()
     {
         GL.DeleteProgram(Handle);

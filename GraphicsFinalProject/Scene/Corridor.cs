@@ -69,6 +69,7 @@ public class Corridor
 
         DrawWallPanels(drawCube);
         DrawCeilingBeams(drawCube);
+        DrawCeilingLights(drawCube);
         DrawDoorFrame(drawCube);
     }
 
@@ -118,6 +119,24 @@ public class Corridor
                 Matrix4.CreateScale(Width, beamHeight, beamWidth) *
                 Matrix4.CreateTranslation(0.0f, Height - beamHeight / 2.0f, z);
             drawCube(beamModel, BeamColor);
+        }
+    }
+
+    private void DrawCeilingLights(CubeDrawer drawCube)
+    {
+        Vector3 lightFixtureColor = new(0.95f, 0.85f, 0.35f);
+        const float fixtureWidth = 1.2f;
+        const float fixtureHeight = 0.08f;
+        const int lightCount = 3;
+        float spacing = Length / (lightCount + 1);
+
+        for (int i = 0; i < lightCount; i++)
+        {
+            float z = -spacing * (i + 1);
+            Matrix4 fixtureModel =
+                Matrix4.CreateScale(fixtureWidth, fixtureHeight, 0.5f) *
+                Matrix4.CreateTranslation(0.0f, Height - 0.25f, z);
+            drawCube(fixtureModel, lightFixtureColor);
         }
     }
 
