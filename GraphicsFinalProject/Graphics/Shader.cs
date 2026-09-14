@@ -63,6 +63,11 @@ public class Shader : IDisposable
     public void SetMatrix4(string name, Matrix4 matrix)
     {
         int location = GL.GetUniformLocation(Handle, name);
+        // OpenTK stores these matrices with translation in its fourth row,
+        // and our C# code composes them as Scale * Rotation * Translation.
+        // Uploading without transposing preserves the established OpenTK
+        // layout; GLSL's projection * view * model * vertex then has the
+        // same effect as the intended C# row-style vertex transform.
         GL.UniformMatrix4(location, false, ref matrix);
     }
 
@@ -75,6 +80,7 @@ public class Shader : IDisposable
     public void SetMatrix3(string name, Matrix3 matrix)
     {
         int location = GL.GetUniformLocation(Handle, name);
+        // Matrix3 follows the same OpenTK/GLSL convention as Matrix4 above.
         GL.UniformMatrix3(location, false, ref matrix);
     }
 

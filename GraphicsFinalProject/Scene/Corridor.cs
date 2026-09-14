@@ -5,9 +5,9 @@ namespace GraphicsFinalProject.Scene;
 
 /// <summary>
 /// Builds a simple futuristic corridor entirely out of scaled/translated
-/// unit cubes. Every piece below is expressed as Translation * Rotation *
-/// Scale applied to the same shared cube mesh (see Renderer.DrawCube) -
-/// there is no separate geometry per piece, only different matrices.
+/// unit cubes. Every piece below uses an explicit model-matrix composition
+/// applied to the same shared cube mesh (see Renderer.DrawCube) - there is
+/// no separate geometry per piece, only different matrices.
 /// </summary>
 public class Corridor
 {

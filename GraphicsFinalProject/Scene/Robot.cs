@@ -227,9 +227,9 @@ public class Robot
         // Hip joint: fixed position relative to the robot root.
         Matrix4 hipJoint = Matrix4.CreateTranslation(hipSpacing, hipY, 0.0f) * root;
 
-        // The leg swings forward/back around the hip (rotation happens
-        // before the leg is pushed downward, so it pivots at the hip
-        // rather than at the leg's own center).
+        // The leg model is explicitly composed as legLocal * legRotation *
+        // hipJoint, so the local leg shape is carried by the rotated hip
+        // frame rather than being rotated around the world origin.
         Matrix4 legRotation = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(angle));
 
         // Move the leg's cube down by half its length so its TOP edge
@@ -320,10 +320,9 @@ public class Robot
         Matrix4 shoulderPadLocal = Matrix4.CreateScale(shoulderPadSize, shoulderPadSize, shoulderPadSize);
         drawCube(shoulderPadLocal * shoulderJoint, ShoulderColor, TextureKind.Robot);
 
-        // 2) Shoulder rotation: swings the whole arm forward/back. This
-        //    is applied AFTER the shoulder joint's translation but BEFORE
-        //    any arm geometry, so it rotates around the shoulder point,
-        //    not around the arm's own center.
+        // 2) Shoulder rotation: swings the whole arm forward/back. The
+        //    upper-arm model is explicitly upperArmLocal * shoulderRotation
+        //    * shoulderJoint, so the arm follows the shoulder frame.
         Matrix4 shoulderRotation = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(angle));
 
         // 3) Upper arm: a box whose local origin is at its TOP (shoulder

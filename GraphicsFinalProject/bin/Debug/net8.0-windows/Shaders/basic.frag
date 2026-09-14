@@ -16,6 +16,9 @@ uniform int uPointLightCount;
 uniform vec3 uPointLightPositions[MAX_POINT_LIGHTS];
 uniform vec3 uPointLightColors[MAX_POINT_LIGHTS];
 uniform float uPointLightIntensities[MAX_POINT_LIGHTS];
+uniform float uPointLightConstants[MAX_POINT_LIGHTS];
+uniform float uPointLightLinears[MAX_POINT_LIGHTS];
+uniform float uPointLightQuadratics[MAX_POINT_LIGHTS];
 
 uniform vec3 uViewPosition;
 uniform float uAmbientStrength;
@@ -37,7 +40,10 @@ void main()
     // Ambient: a small constant amount of light so nothing is ever fully
     // black, even facing away from the light. Kept fairly strong so the
     // corridor stays easy to see during the demo.
-    vec3 lighting = vec3(uAmbientStrength);
+    vec3 baseColor = uUseTexture ? texture(uTexture, vTexCoord).rgb * uColor : uColor;
+    vec3 ambientResult = vec3(uAmbientStrength) * baseColor;
+    vec3 diffuseResult = vec3(0.0);
+    vec3 specularResult = vec3(0.0);
     vec3 viewDirection = normalize(uViewPosition - vFragPosition);
 
     for (int i = 0; i < MAX_POINT_LIGHTS; i++)
@@ -47,13 +53,24 @@ void main()
             break;
         }
 
-        vec3 lightDirection = normalize(uPointLightPositions[i] - vFragPosition);
+        vec3 toLight = uPointLightPositions[i] - vFragPosition;
+        float distanceToLight = length(toLight);
+        vec3 lightDirection = normalize(toLight);
+        float attenuation = 1.0 / (uPointLightConstants[i]
+            + uPointLightLinears[i] * distanceToLight
+            + uPointLightQuadratics[i] * distanceToLight * distanceToLight);
         float diffuseFactor = max(dot(normal, lightDirection), 0.0);
-        vec3 halfwayDirection = normalize(lightDirection + viewDirection);
-        float specularFactor = pow(max(dot(normal, halfwayDirection), 0.0), uShininess);
-        vec3 contribution = diffuseFactor * uPointLightColors[i]
-            + uSpecularStrength * specularFactor * uPointLightColors[i];
-        lighting += contribution * uPointLightIntensities[i];
+        diffuseResult += diffuseFactor * uPointLightColors[i]
+            * uPointLightIntensities[i] * attenuation * baseColor;
+
+        // Do not add a highlight when the surface receives no direct light.
+        if (diffuseFactor > 0.0)
+        {
+            vec3 halfwayDirection = normalize(lightDirection + viewDirection);
+            float specularFactor = pow(max(dot(normal, halfwayDirection), 0.0), uShininess);
+            specularResult += uSpecularStrength * specularFactor * uPointLightColors[i]
+                * uPointLightIntensities[i] * attenuation;
+        }
     }
 
     if (uSpotlightEnabled)
@@ -65,15 +82,18 @@ void main()
                                       spotCosine);
         vec3 lightDirection = normalize(uSpotlightPosition - vFragPosition);
         float diffuseFactor = max(dot(normal, lightDirection), 0.0);
-        vec3 halfwayDirection = normalize(lightDirection + viewDirection);
-        float specularFactor = pow(max(dot(normal, halfwayDirection), 0.0), uShininess);
-        vec3 contribution = diffuseFactor * uSpotlightColor
-            + uSpecularStrength * specularFactor * uSpotlightColor;
-        lighting += contribution * spotFactor * uSpotlightIntensity;
+        diffuseResult += diffuseFactor * uSpotlightColor
+            * spotFactor * uSpotlightIntensity * baseColor;
+        if (diffuseFactor > 0.0)
+        {
+            vec3 halfwayDirection = normalize(lightDirection + viewDirection);
+            float specularFactor = pow(max(dot(normal, halfwayDirection), 0.0), uShininess);
+            specularResult += uSpecularStrength * specularFactor * uSpotlightColor
+                * spotFactor * uSpotlightIntensity;
+        }
     }
 
-    vec3 baseColor = uUseTexture ? texture(uTexture, vTexCoord).rgb * uColor : uColor;
-    vec3 result = lighting * baseColor;
+    vec3 result = ambientResult + diffuseResult + specularResult;
 
     FragColor = vec4(result, 1.0);
 }

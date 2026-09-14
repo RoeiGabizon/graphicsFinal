@@ -100,6 +100,9 @@ public class Renderer
             _shader.SetVector3($"uPointLightPositions[{i}]", light.Position);
             _shader.SetVector3($"uPointLightColors[{i}]", light.Color);
             _shader.SetFloat($"uPointLightIntensities[{i}]", light.Intensity);
+            _shader.SetFloat($"uPointLightConstants[{i}]", light.Constant);
+            _shader.SetFloat($"uPointLightLinears[{i}]", light.Linear);
+            _shader.SetFloat($"uPointLightQuadratics[{i}]", light.Quadratic);
         }
 
         _shader.SetInt("uSpotlightEnabled", spotlightEnabled ? 1 : 0);

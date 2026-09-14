@@ -121,6 +121,7 @@ public class MainForm : Form
     {
         float deltaTime = (float)_clock.Elapsed.TotalSeconds;
         _clock.Restart();
+        deltaTime = MathF.Min(deltaTime, 0.1f);
 
         _camera.Move(
             forward: _pressedKeys.Contains(Keys.W),
