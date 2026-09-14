@@ -25,6 +25,8 @@ public class Corridor
     private static readonly Vector3 PanelColor = new(0.10f, 0.65f, 0.85f);
     private static readonly Vector3 BeamColor = new(0.55f, 0.55f, 0.60f);
     private static readonly Vector3 DoorFrameColor = new(0.85f, 0.65f, 0.10f);
+    private static readonly Vector3 DoorColor = new(0.08f, 0.16f, 0.24f);
+    private static readonly Vector3 FloorAccentColor = new(0.08f, 0.45f, 0.65f);
 
     /// <summary>
     /// Draws every corridor piece by calling <paramref name="drawCube"/>
@@ -71,6 +73,7 @@ public class Corridor
         DrawWallPanels(drawCube);
         DrawCeilingBeams(drawCube);
         DrawCeilingLights(drawCube);
+        DrawFloorAccents(drawCube);
         DrawDoorFrame(drawCube);
     }
 
@@ -141,6 +144,21 @@ public class Corridor
         }
     }
 
+    private void DrawFloorAccents(CubeDrawer drawCube)
+    {
+        const float stripWidth = 0.08f;
+        const float stripHeight = 0.02f;
+        const float stripDepth = Length - 1.0f;
+
+        foreach (float x in new[] { -2.8f, 2.8f })
+        {
+            Matrix4 stripModel =
+                Matrix4.CreateScale(stripWidth, stripHeight, stripDepth) *
+                Matrix4.CreateTranslation(x, 0.015f, -Length / 2.0f);
+            drawCube(stripModel, FloorAccentColor, TextureKind.None);
+        }
+    }
+
     /// <summary>
     /// A simple door frame (three cubes) set just in front of the end wall.
     /// </summary>
@@ -150,6 +168,11 @@ public class Corridor
         const float doorWidth = 3.0f;
         const float doorHeight = 3.5f;
         float frameZ = -Length + 1.0f;
+
+        Matrix4 doorModel =
+            Matrix4.CreateScale(doorWidth - frameThickness, doorHeight - frameThickness, 0.12f) *
+            Matrix4.CreateTranslation(0.0f, (doorHeight - frameThickness) / 2.0f, frameZ + 0.05f);
+        drawCube(doorModel, DoorColor, TextureKind.None);
 
         // Left post
         Matrix4 leftPost =

@@ -21,7 +21,7 @@ public class MainForm : Form
     private readonly Panel _controlPanel;
     private readonly Label _titleLabel;
     private readonly Renderer _renderer = new();
-    private readonly Camera _camera = new(new Vector3(0.0f, 1.5f, 5.0f));
+    private readonly Camera _camera = new(new Vector3(0.0f, 1.8f, 6.0f));
     private readonly Robot _robot = new()
     {
         // Standing near the corridor entrance, facing down the corridor
@@ -229,9 +229,9 @@ public class MainForm : Form
         };
         TrackBar lightTrackBar = CreateTrackBar(0, 30, 12, new Point(10, 28));
         TrackBar ambientTrackBar = CreateTrackBar(0, 100, 25, new Point(10, 84));
-        lightingGroup.Controls.Add(new Label { Text = "Main Light Intensity", Location = new Point(10, 10), AutoSize = true });
+        lightingGroup.Controls.Add(new Label { Text = "Ceiling Light Intensity", Location = new Point(10, 10), AutoSize = true });
         lightingGroup.Controls.Add(lightTrackBar);
-        lightingGroup.Controls.Add(new Label { Text = "Ambient Intensity", Location = new Point(10, 66), AutoSize = true });
+        lightingGroup.Controls.Add(new Label { Text = "Ambient Scene Light", Location = new Point(10, 66), AutoSize = true });
         lightingGroup.Controls.Add(ambientTrackBar);
         _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", Location = new Point(10, 138), AutoSize = true, Checked = true };
         lightingGroup.Controls.Add(_spotlightCheckBox);
@@ -280,7 +280,7 @@ public class MainForm : Form
         robotGroup.Controls.Add(scaleTrackBar);
         robotGroup.Controls.Add(new Label { Text = "Head Rotation", Location = new Point(10, 172), AutoSize = true });
         robotGroup.Controls.Add(_headRotationTrackBar);
-        robotGroup.Controls.Add(new Label { Text = "Arm Pose (walking off)", Location = new Point(10, 228), AutoSize = true });
+        robotGroup.Controls.Add(new Label { Text = "Manual Arm Pose (walking off)", Location = new Point(10, 228), AutoSize = true });
         robotGroup.Controls.Add(_armPoseTrackBar);
         robotGroup.Height = 295;
         _controlPanel.Controls.Add(robotGroup);
