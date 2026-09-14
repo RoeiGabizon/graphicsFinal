@@ -51,6 +51,10 @@
             "OpenTK.GLControl": {
               "target": "Package",
               "version": "[4.0.2, )"
+            },
+            "StbImageSharp": {
+              "target": "Package",
+              "version": "[2.27.13, )"
             }
           },
           "imports": [

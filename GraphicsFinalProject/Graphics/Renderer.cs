@@ -19,6 +19,16 @@ public class Renderer
     private Mesh? _cubeMesh;
     private Corridor? _corridor;
     private float _aspectRatio = 1.0f;
+    private Texture? _corridorTexture;
+    private Texture? _floorTexture;
+    private Texture? _robotTexture;
+    private int _robotAppearance;
+    private static readonly Vector3[] RobotAppearanceTints =
+    {
+        Vector3.One,
+        new Vector3(1.0f, 0.45f, 0.45f),
+        new Vector3(0.45f, 0.65f, 1.0f),
+    };
 
     // A small, fixed set of point lights matching the visible ceiling
     // fixtures. Keeping the count fixed keeps the shader easy to explain.
@@ -47,6 +57,15 @@ public class Renderer
 
         _cubeMesh = new Mesh(CubeVertices, CubeIndices);
         _corridor = new Corridor();
+        string textureDir = Path.Combine(AppContext.BaseDirectory, "Assets", "Textures");
+        _corridorTexture = Texture.Load(Path.Combine(textureDir, "corridor_wall.png"));
+        _floorTexture = Texture.Load(Path.Combine(textureDir, "floor.png"));
+        _robotTexture = Texture.Load(Path.Combine(textureDir, "robot.png"));
+    }
+
+    public void CycleRobotAppearance()
+    {
+        _robotAppearance = (_robotAppearance + 1) % RobotAppearanceTints.Length;
     }
 
     public void Resize(int width, int height)
@@ -104,10 +123,25 @@ public class Renderer
     /// flat color. This is how one mesh becomes many different-looking
     /// objects: only the uniforms change between calls, not the geometry.
     /// </summary>
-    private void DrawCube(Matrix4 model, Vector3 color)
+    private void DrawCube(Matrix4 model, Vector3 color, TextureKind textureKind)
     {
         _shader!.SetMatrix4("uModel", model);
+        if (textureKind == TextureKind.Robot)
+        {
+            color *= RobotAppearanceTints[_robotAppearance];
+        }
         _shader.SetVector3("uColor", color);
+
+        Texture? texture = textureKind switch
+        {
+            TextureKind.CorridorWall => _corridorTexture,
+            TextureKind.Floor => _floorTexture,
+            TextureKind.Robot => _robotTexture,
+            _ => null,
+        };
+        _shader.SetInt("uUseTexture", texture is null ? 0 : 1);
+        _shader.SetInt("uTexture", 0);
+        texture?.Bind(TextureUnit.Texture0);
 
         // The normal matrix corrects normals for non-uniform scaling in the
         // model matrix (e.g. a wall stretched thin in one axis): it is the
@@ -124,49 +158,52 @@ public class Renderer
     {
         _cubeMesh?.Dispose();
         _shader?.Dispose();
+        _corridorTexture?.Dispose();
+        _floorTexture?.Dispose();
+        _robotTexture?.Dispose();
     }
 
     // Unit cube centered at the origin (side length 1). Each vertex has a
-    // position (3 floats) followed by its face normal (3 floats). Every
+    // position (3 floats), face normal (3 floats), and face-local UV (2 floats). Every
     // face uses its own 4 vertices so each can have a flat, correct normal
     // (a shared-vertex cube can't do this without smoothing edges).
     private static readonly float[] CubeVertices =
     {
         // Front face (+Z)
-        -0.5f, -0.5f,  0.5f,   0f, 0f, 1f,
-         0.5f, -0.5f,  0.5f,   0f, 0f, 1f,
-         0.5f,  0.5f,  0.5f,   0f, 0f, 1f,
-        -0.5f,  0.5f,  0.5f,   0f, 0f, 1f,
+        -0.5f, -0.5f,  0.5f,   0f, 0f, 1f,   0f, 0f,
+         0.5f, -0.5f,  0.5f,   0f, 0f, 1f,   1f, 0f,
+         0.5f,  0.5f,  0.5f,   0f, 0f, 1f,   1f, 1f,
+        -0.5f,  0.5f,  0.5f,   0f, 0f, 1f,   0f, 1f,
 
         // Back face (-Z)
-         0.5f, -0.5f, -0.5f,   0f, 0f, -1f,
-        -0.5f, -0.5f, -0.5f,   0f, 0f, -1f,
-        -0.5f,  0.5f, -0.5f,   0f, 0f, -1f,
-         0.5f,  0.5f, -0.5f,   0f, 0f, -1f,
+         0.5f, -0.5f, -0.5f,   0f, 0f, -1f,   0f, 0f,
+        -0.5f, -0.5f, -0.5f,   0f, 0f, -1f,   1f, 0f,
+        -0.5f,  0.5f, -0.5f,   0f, 0f, -1f,   1f, 1f,
+         0.5f,  0.5f, -0.5f,   0f, 0f, -1f,   0f, 1f,
 
         // Left face (-X)
-        -0.5f, -0.5f, -0.5f,  -1f, 0f, 0f,
-        -0.5f, -0.5f,  0.5f,  -1f, 0f, 0f,
-        -0.5f,  0.5f,  0.5f,  -1f, 0f, 0f,
-        -0.5f,  0.5f, -0.5f,  -1f, 0f, 0f,
+        -0.5f, -0.5f, -0.5f,  -1f, 0f, 0f,   0f, 0f,
+        -0.5f, -0.5f,  0.5f,  -1f, 0f, 0f,   1f, 0f,
+        -0.5f,  0.5f,  0.5f,  -1f, 0f, 0f,   1f, 1f,
+        -0.5f,  0.5f, -0.5f,  -1f, 0f, 0f,   0f, 1f,
 
         // Right face (+X)
-         0.5f, -0.5f,  0.5f,   1f, 0f, 0f,
-         0.5f, -0.5f, -0.5f,   1f, 0f, 0f,
-         0.5f,  0.5f, -0.5f,   1f, 0f, 0f,
-         0.5f,  0.5f,  0.5f,   1f, 0f, 0f,
+         0.5f, -0.5f,  0.5f,   1f, 0f, 0f,   0f, 0f,
+         0.5f, -0.5f, -0.5f,   1f, 0f, 0f,   1f, 0f,
+         0.5f,  0.5f, -0.5f,   1f, 0f, 0f,   1f, 1f,
+         0.5f,  0.5f,  0.5f,   1f, 0f, 0f,   0f, 1f,
 
         // Top face (+Y)
-        -0.5f,  0.5f,  0.5f,   0f, 1f, 0f,
-         0.5f,  0.5f,  0.5f,   0f, 1f, 0f,
-         0.5f,  0.5f, -0.5f,   0f, 1f, 0f,
-        -0.5f,  0.5f, -0.5f,   0f, 1f, 0f,
+        -0.5f,  0.5f,  0.5f,   0f, 1f, 0f,   0f, 0f,
+         0.5f,  0.5f,  0.5f,   0f, 1f, 0f,   1f, 0f,
+         0.5f,  0.5f, -0.5f,   0f, 1f, 0f,   1f, 1f,
+        -0.5f,  0.5f, -0.5f,   0f, 1f, 0f,   0f, 1f,
 
         // Bottom face (-Y)
-        -0.5f, -0.5f, -0.5f,   0f, -1f, 0f,
-         0.5f, -0.5f, -0.5f,   0f, -1f, 0f,
-         0.5f, -0.5f,  0.5f,   0f, -1f, 0f,
-        -0.5f, -0.5f,  0.5f,   0f, -1f, 0f,
+        -0.5f, -0.5f, -0.5f,   0f, -1f, 0f,   0f, 0f,
+         0.5f, -0.5f, -0.5f,   0f, -1f, 0f,   1f, 0f,
+         0.5f, -0.5f,  0.5f,   0f, -1f, 0f,   1f, 1f,
+        -0.5f, -0.5f,  0.5f,   0f, -1f, 0f,   0f, 1f,
     };
 
     private static readonly uint[] CubeIndices =

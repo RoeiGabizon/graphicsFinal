@@ -15,7 +15,7 @@ public class Mesh : IDisposable
     private readonly int _indexCount;
 
     /// <summary>
-    /// Vertex layout: position (3 floats) + normal (3 floats) per vertex.
+    /// Vertex layout: position (3 floats) + normal (3 floats) + UV (2 floats).
     /// Color is supplied per-draw via a shader uniform so the same mesh can
     /// be reused with different colors.
     /// </summary>
@@ -34,7 +34,7 @@ public class Mesh : IDisposable
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
         GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-        const int stride = 6 * sizeof(float);
+        const int stride = 8 * sizeof(float);
 
         // aPosition (location = 0)
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
@@ -43,6 +43,10 @@ public class Mesh : IDisposable
         // aNormal (location = 1)
         GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
         GL.EnableVertexAttribArray(1);
+
+        // aTexCoord (location = 2)
+        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
+        GL.EnableVertexAttribArray(2);
 
         GL.BindVertexArray(0);
     }

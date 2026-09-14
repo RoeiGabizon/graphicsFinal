@@ -1,4 +1,5 @@
 using OpenTK.Mathematics;
+using GraphicsFinalProject.Graphics;
 
 namespace GraphicsFinalProject.Scene;
 
@@ -11,7 +12,7 @@ namespace GraphicsFinalProject.Scene;
 public class Corridor
 {
     /// <summary>Signature matching Renderer's DrawCube(model, color) helper.</summary>
-    public delegate void CubeDrawer(Matrix4 model, Vector3 color);
+    public delegate void CubeDrawer(Matrix4 model, Vector3 color, TextureKind textureKind);
 
     private const float Width = 8.0f;
     private const float Height = 5.0f;
@@ -41,31 +42,31 @@ public class Corridor
         Matrix4 floorModel =
             Matrix4.CreateScale(Width, wallThickness, Length) *
             Matrix4.CreateTranslation(0.0f, -wallThickness / 2.0f, -Length / 2.0f);
-        drawCube(floorModel, FloorColor);
+        drawCube(floorModel, FloorColor, TextureKind.Floor);
 
         // --- Ceiling ---
         Matrix4 ceilingModel =
             Matrix4.CreateScale(Width, wallThickness, Length) *
             Matrix4.CreateTranslation(0.0f, Height + wallThickness / 2.0f, -Length / 2.0f);
-        drawCube(ceilingModel, CeilingColor);
+        drawCube(ceilingModel, CeilingColor, TextureKind.CorridorWall);
 
         // --- Left wall ---
         Matrix4 leftWallModel =
             Matrix4.CreateScale(wallThickness, Height, Length) *
             Matrix4.CreateTranslation(-Width / 2.0f - wallThickness / 2.0f, Height / 2.0f, -Length / 2.0f);
-        drawCube(leftWallModel, WallColor);
+        drawCube(leftWallModel, WallColor, TextureKind.CorridorWall);
 
         // --- Right wall ---
         Matrix4 rightWallModel =
             Matrix4.CreateScale(wallThickness, Height, Length) *
             Matrix4.CreateTranslation(Width / 2.0f + wallThickness / 2.0f, Height / 2.0f, -Length / 2.0f);
-        drawCube(rightWallModel, WallColor);
+        drawCube(rightWallModel, WallColor, TextureKind.CorridorWall);
 
         // --- End wall (closes off the far end of the corridor) ---
         Matrix4 endWallModel =
             Matrix4.CreateScale(Width, Height, wallThickness) *
             Matrix4.CreateTranslation(0.0f, Height / 2.0f, -Length - wallThickness / 2.0f);
-        drawCube(endWallModel, EndWallColor);
+        drawCube(endWallModel, EndWallColor, TextureKind.CorridorWall);
 
         DrawWallPanels(drawCube);
         DrawCeilingBeams(drawCube);
@@ -92,12 +93,12 @@ public class Corridor
             Matrix4 leftPanel =
                 Matrix4.CreateScale(panelWidth, panelHeight, panelDepth) *
                 Matrix4.CreateTranslation(-Width / 2.0f, Height / 2.0f, z);
-            drawCube(leftPanel, PanelColor);
+            drawCube(leftPanel, PanelColor, TextureKind.CorridorWall);
 
             Matrix4 rightPanel =
                 Matrix4.CreateScale(panelWidth, panelHeight, panelDepth) *
                 Matrix4.CreateTranslation(Width / 2.0f, Height / 2.0f, z);
-            drawCube(rightPanel, PanelColor);
+            drawCube(rightPanel, PanelColor, TextureKind.CorridorWall);
         }
     }
 
@@ -118,7 +119,7 @@ public class Corridor
             Matrix4 beamModel =
                 Matrix4.CreateScale(Width, beamHeight, beamWidth) *
                 Matrix4.CreateTranslation(0.0f, Height - beamHeight / 2.0f, z);
-            drawCube(beamModel, BeamColor);
+            drawCube(beamModel, BeamColor, TextureKind.CorridorWall);
         }
     }
 
@@ -136,7 +137,7 @@ public class Corridor
             Matrix4 fixtureModel =
                 Matrix4.CreateScale(fixtureWidth, fixtureHeight, 0.5f) *
                 Matrix4.CreateTranslation(0.0f, Height - 0.25f, z);
-            drawCube(fixtureModel, lightFixtureColor);
+            drawCube(fixtureModel, lightFixtureColor, TextureKind.None);
         }
     }
 
@@ -154,18 +155,18 @@ public class Corridor
         Matrix4 leftPost =
             Matrix4.CreateScale(frameThickness, doorHeight, frameThickness) *
             Matrix4.CreateTranslation(-doorWidth / 2.0f, doorHeight / 2.0f, frameZ);
-        drawCube(leftPost, DoorFrameColor);
+        drawCube(leftPost, DoorFrameColor, TextureKind.CorridorWall);
 
         // Right post
         Matrix4 rightPost =
             Matrix4.CreateScale(frameThickness, doorHeight, frameThickness) *
             Matrix4.CreateTranslation(doorWidth / 2.0f, doorHeight / 2.0f, frameZ);
-        drawCube(rightPost, DoorFrameColor);
+        drawCube(rightPost, DoorFrameColor, TextureKind.CorridorWall);
 
         // Top lintel spanning between the posts
         Matrix4 lintel =
             Matrix4.CreateScale(doorWidth + frameThickness, frameThickness, frameThickness) *
             Matrix4.CreateTranslation(0.0f, doorHeight, frameZ);
-        drawCube(lintel, DoorFrameColor);
+        drawCube(lintel, DoorFrameColor, TextureKind.CorridorWall);
     }
 }

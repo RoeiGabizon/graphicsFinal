@@ -1,4 +1,5 @@
 using OpenTK.Mathematics;
+using GraphicsFinalProject.Graphics;
 
 namespace GraphicsFinalProject.Scene;
 
@@ -15,7 +16,7 @@ namespace GraphicsFinalProject.Scene;
 public class Robot
 {
     /// <summary>Signature matching Renderer's DrawCube(model, color) helper.</summary>
-    public delegate void CubeDrawer(Matrix4 model, Vector3 color);
+    public delegate void CubeDrawer(Matrix4 model, Vector3 color, TextureKind textureKind);
 
     // --- Root transform: where the whole robot is in the world ---
     public Vector3 Position { get; set; } = Vector3.Zero;
@@ -238,7 +239,7 @@ public class Robot
             Matrix4.CreateTranslation(0.0f, -LegLength / 2.0f, 0.0f);
 
         Matrix4 legModel = legLocal * legRotation * hipJoint;
-        drawCube(legModel, LegColor);
+        drawCube(legModel, LegColor, TextureKind.Robot);
     }
 
     private void DrawTorso(CubeDrawer drawCube, Matrix4 root, float hipY)
@@ -248,7 +249,7 @@ public class Robot
             Matrix4.CreateTranslation(0.0f, hipY + TorsoHeight / 2.0f, 0.0f);
 
         Matrix4 torsoModel = torsoLocal * root;
-        drawCube(torsoModel, TorsoColor);
+        drawCube(torsoModel, TorsoColor, TextureKind.Robot);
     }
 
     private void DrawHead(CubeDrawer drawCube, Matrix4 root, float hipY)
@@ -266,7 +267,7 @@ public class Robot
             Matrix4.CreateTranslation(0.0f, HeadSize / 2.0f, 0.0f);
 
         Matrix4 headModel = headLocal * headRotation * neckJoint;
-        drawCube(headModel, HeadColor);
+        drawCube(headModel, HeadColor, TextureKind.Robot);
 
         // Two small eyes on the front of the head, parented to the same
         // neck joint + head rotation so they move together with the head.
@@ -278,12 +279,12 @@ public class Robot
         Matrix4 leftEyeLocal =
             Matrix4.CreateScale(eyeSize, eyeSize, eyeSize) *
             Matrix4.CreateTranslation(-eyeSpacing, eyeY, eyeZ);
-        drawCube(leftEyeLocal * headRotation * neckJoint, EyeColor);
+        drawCube(leftEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.Robot);
 
         Matrix4 rightEyeLocal =
             Matrix4.CreateScale(eyeSize, eyeSize, eyeSize) *
             Matrix4.CreateTranslation(eyeSpacing, eyeY, eyeZ);
-        drawCube(rightEyeLocal * headRotation * neckJoint, EyeColor);
+        drawCube(rightEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.Robot);
 
         // Small antenna on top of the head.
         const float antennaThickness = 0.05f;
@@ -291,7 +292,7 @@ public class Robot
         Matrix4 antennaLocal =
             Matrix4.CreateScale(antennaThickness, antennaLength, antennaThickness) *
             Matrix4.CreateTranslation(0.0f, HeadSize + antennaLength / 2.0f, 0.0f);
-        drawCube(antennaLocal * headRotation * neckJoint, AntennaColor);
+        drawCube(antennaLocal * headRotation * neckJoint, AntennaColor, TextureKind.Robot);
     }
 
     private void DrawArms(CubeDrawer drawCube, Matrix4 root, float hipY)
@@ -317,7 +318,7 @@ public class Robot
         // Small shoulder pad cube, does not rotate with the arm.
         const float shoulderPadSize = 0.3f;
         Matrix4 shoulderPadLocal = Matrix4.CreateScale(shoulderPadSize, shoulderPadSize, shoulderPadSize);
-        drawCube(shoulderPadLocal * shoulderJoint, ShoulderColor);
+        drawCube(shoulderPadLocal * shoulderJoint, ShoulderColor, TextureKind.Robot);
 
         // 2) Shoulder rotation: swings the whole arm forward/back. This
         //    is applied AFTER the shoulder joint's translation but BEFORE
@@ -332,7 +333,7 @@ public class Robot
             Matrix4.CreateScale(ArmThickness, UpperArmLength, ArmThickness) *
             Matrix4.CreateTranslation(0.0f, -UpperArmLength / 2.0f, 0.0f);
         Matrix4 upperArmModel = upperArmLocal * shoulderRotation * shoulderJoint;
-        drawCube(upperArmModel, ArmColor);
+        drawCube(upperArmModel, ArmColor, TextureKind.Robot);
 
         // 4) Elbow joint: sits at the bottom of the upper arm. It inherits
         //    the shoulder's rotation (elbow moves with the shoulder swing)
@@ -347,6 +348,6 @@ public class Robot
             Matrix4.CreateScale(ArmThickness * 0.85f, LowerArmLength, ArmThickness * 0.85f) *
             Matrix4.CreateTranslation(0.0f, -LowerArmLength / 2.0f, 0.0f);
         Matrix4 lowerArmModel = lowerArmLocal * elbowJoint;
-        drawCube(lowerArmModel, ArmColor);
+        drawCube(lowerArmModel, ArmColor, TextureKind.Robot);
     }
 }

@@ -2,10 +2,13 @@
 
 in vec3 vFragPosition;
 in vec3 vNormal;
+in vec2 vTexCoord;
 
 #define MAX_POINT_LIGHTS 4
 
 uniform vec3 uColor;
+uniform bool uUseTexture;
+uniform sampler2D uTexture;
 uniform float uSpecularStrength;
 uniform float uShininess;
 
@@ -69,7 +72,8 @@ void main()
         lighting += contribution * spotFactor * uSpotlightIntensity;
     }
 
-    vec3 result = lighting * uColor;
+    vec3 baseColor = uUseTexture ? texture(uTexture, vTexCoord).rgb * uColor : uColor;
+    vec3 result = lighting * baseColor;
 
     FragColor = vec4(result, 1.0);
 }

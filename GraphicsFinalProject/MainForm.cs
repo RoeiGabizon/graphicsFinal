@@ -38,6 +38,7 @@ public class MainForm : Form
     private bool _spaceWasDown;
     private bool _spotlightEnabled = true;
     private bool _lWasDown;
+    private bool _tWasDown;
 
     public MainForm()
     {
@@ -145,6 +146,13 @@ public class MainForm : Form
             _spotlightEnabled = !_spotlightEnabled;
         }
         _lWasDown = lIsDown;
+
+        bool tIsDown = _pressedKeys.Contains(Keys.T);
+        if (tIsDown && !_tWasDown)
+        {
+            _renderer.CycleRobotAppearance();
+        }
+        _tWasDown = tIsDown;
 
         _robot.Update(
             deltaTime: deltaTime,
