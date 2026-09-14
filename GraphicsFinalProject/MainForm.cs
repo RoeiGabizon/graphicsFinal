@@ -39,6 +39,7 @@ public class MainForm : Form
     private bool _spotlightEnabled = true;
     private bool _lWasDown;
     private bool _tWasDown;
+    private bool _pWasDown;
 
     public MainForm()
     {
@@ -154,6 +155,15 @@ public class MainForm : Form
             _renderer.CycleRobotAppearance();
         }
         _tWasDown = tIsDown;
+
+        bool pIsDown = _pressedKeys.Contains(Keys.P);
+        if (pIsDown && !_pWasDown)
+        {
+            _camera.ProjectionMode = _camera.ProjectionMode == ProjectionMode.Perspective
+                ? ProjectionMode.Orthographic
+                : ProjectionMode.Perspective;
+        }
+        _pWasDown = pIsDown;
 
         _robot.Update(
             deltaTime: deltaTime,

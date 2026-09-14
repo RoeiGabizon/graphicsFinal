@@ -2,6 +2,12 @@ using OpenTK.Mathematics;
 
 namespace GraphicsFinalProject.Scene;
 
+public enum ProjectionMode
+{
+    Perspective,
+    Orthographic,
+}
+
 /// <summary>
 /// A simple free-look/fly camera. Owns its own position/orientation state
 /// and knows how to turn that into View/Projection matrices. All input
@@ -35,6 +41,12 @@ public class Camera
     /// <summary>Vertical field of view, in degrees. Controls zoom.</summary>
     public float Fov { get; set; } = 60.0f;
 
+    /// <summary>Current projection type. Perspective is the default.</summary>
+    public ProjectionMode ProjectionMode { get; set; } = ProjectionMode.Perspective;
+
+    /// <summary>Visible vertical size when using orthographic projection.</summary>
+    public float OrthographicSize { get; set; } = 10.0f;
+
     /// <summary>Movement speed in world units per second.</summary>
     public float MovementSpeed { get; set; } = 3.0f;
 
@@ -54,11 +66,27 @@ public class Camera
 
     public Matrix4 GetProjectionMatrix(float aspectRatio)
     {
+        const float nearPlane = 0.1f;
+        const float farPlane = 100.0f;
+
+        if (ProjectionMode == ProjectionMode.Orthographic)
+        {
+            float halfHeight = OrthographicSize / 2.0f;
+            float halfWidth = halfHeight * aspectRatio;
+            return Matrix4.CreateOrthographicOffCenter(
+                -halfWidth,
+                halfWidth,
+                -halfHeight,
+                halfHeight,
+                nearPlane,
+                farPlane);
+        }
+
         return Matrix4.CreatePerspectiveFieldOfView(
             MathHelper.DegreesToRadians(Fov),
             aspectRatio,
-            0.1f,
-            100.0f);
+            nearPlane,
+            farPlane);
     }
 
     /// <summary>
