@@ -21,12 +21,12 @@ public class MainForm : Form
     private readonly Panel _controlPanel;
     private readonly Label _titleLabel;
     private readonly Renderer _renderer = new();
-    private readonly Camera _camera = new(new Vector3(0.0f, 1.8f, 6.0f));
+    private readonly Camera _camera = new(new Vector3(0.0f, 1.8f, -1.0f));
     private readonly Robot _robot = new()
     {
         // Standing near the corridor entrance, facing down the corridor
         // (which runs along -Z).
-        Position = new Vector3(0.0f, 0.0f, -2.0f),
+        Position = new Vector3(0.0f, 0.0f, -4.5f),
         RotationY = 180.0f,
     };
     private readonly Stopwatch _clock = new();

@@ -47,9 +47,9 @@ public class Renderer
     // fixtures. Keeping the count fixed keeps the shader easy to explain.
     private readonly PointLight[] _ceilingLights =
     {
-        new(new Vector3(0f, 4.75f, -7.5f), new Vector3(1.0f, 0.85f, 0.55f), 1.8f),
-        new(new Vector3(0f, 4.75f, -15.0f), new Vector3(1.0f, 0.95f, 0.75f), 1.8f),
-        new(new Vector3(0f, 4.75f, -22.5f), new Vector3(0.75f, 0.85f, 1.0f), 1.8f),
+        new(new Vector3(0f, 4.75f, -5.0f), new Vector3(1.0f, 0.85f, 0.55f), 1.8f),
+        new(new Vector3(0f, 4.75f, -14.0f), new Vector3(1.0f, 0.95f, 0.75f), 1.8f),
+        new(new Vector3(0f, 4.75f, -23.0f), new Vector3(0.75f, 0.85f, 1.0f), 1.8f),
     };
 
     private readonly Material _material = Material.Default;

@@ -132,11 +132,11 @@ public class Corridor
         const float fixtureWidth = 1.2f;
         const float fixtureHeight = 0.08f;
         const int lightCount = 3;
-        float spacing = Length / (lightCount + 1);
+        float[] lightPositions = { -5.0f, -14.0f, -23.0f };
 
         for (int i = 0; i < lightCount; i++)
         {
-            float z = -spacing * (i + 1);
+            float z = lightPositions[i];
             Matrix4 fixtureModel =
                 Matrix4.CreateScale(fixtureWidth, fixtureHeight, 0.5f) *
                 Matrix4.CreateTranslation(0.0f, Height - 0.25f, z);
