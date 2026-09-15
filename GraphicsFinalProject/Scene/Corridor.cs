@@ -23,7 +23,7 @@ public class Corridor
     private static readonly Vector3 WallColor = new(0.30f, 0.35f, 0.45f);
     private static readonly Vector3 EndWallColor = new(0.22f, 0.24f, 0.30f);
     private static readonly Vector3 PanelColor = new(0.10f, 0.65f, 0.85f);
-    private static readonly Vector3 BeamColor = new(0.55f, 0.55f, 0.60f);
+    private static readonly Vector3 BeamColor = new(0.22f, 0.24f, 0.27f);
     private static readonly Vector3 DoorFrameColor = new(0.85f, 0.65f, 0.10f);
     private static readonly Vector3 DoorColor = new(0.08f, 0.16f, 0.24f);
     private static readonly Vector3 FloorAccentColor = new(0.08f, 0.45f, 0.65f);
@@ -122,7 +122,7 @@ public class Corridor
             Matrix4 beamModel =
                 Matrix4.CreateScale(Width, beamHeight, beamWidth) *
                 Matrix4.CreateTranslation(0.0f, Height - beamHeight / 2.0f, z);
-            drawCube(beamModel, BeamColor, TextureKind.CorridorWall);
+            drawCube(beamModel, BeamColor, TextureKind.None);
         }
     }
 
@@ -178,18 +178,18 @@ public class Corridor
         Matrix4 leftPost =
             Matrix4.CreateScale(frameThickness, doorHeight, frameThickness) *
             Matrix4.CreateTranslation(-doorWidth / 2.0f, doorHeight / 2.0f, frameZ);
-        drawCube(leftPost, DoorFrameColor, TextureKind.CorridorWall);
+        drawCube(leftPost, DoorFrameColor, TextureKind.None);
 
         // Right post
         Matrix4 rightPost =
             Matrix4.CreateScale(frameThickness, doorHeight, frameThickness) *
             Matrix4.CreateTranslation(doorWidth / 2.0f, doorHeight / 2.0f, frameZ);
-        drawCube(rightPost, DoorFrameColor, TextureKind.CorridorWall);
+        drawCube(rightPost, DoorFrameColor, TextureKind.None);
 
         // Top lintel spanning between the posts
         Matrix4 lintel =
             Matrix4.CreateScale(doorWidth + frameThickness, frameThickness, frameThickness) *
             Matrix4.CreateTranslation(0.0f, doorHeight, frameZ);
-        drawCube(lintel, DoorFrameColor, TextureKind.CorridorWall);
+        drawCube(lintel, DoorFrameColor, TextureKind.None);
     }
 }

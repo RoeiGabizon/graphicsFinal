@@ -26,7 +26,7 @@ public class MainForm : Form
     {
         // Standing near the corridor entrance, facing down the corridor
         // (which runs along -Z).
-        Position = new Vector3(0.0f, 0.0f, -4.5f),
+        Position = new Vector3(0.0f, 0.0f, -5.5f),
         RotationY = 180.0f,
     };
     private readonly Stopwatch _clock = new();

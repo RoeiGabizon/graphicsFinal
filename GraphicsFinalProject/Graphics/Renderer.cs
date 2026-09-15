@@ -36,13 +36,6 @@ public class Renderer
             }
         }
     }
-    private static readonly Vector3[] RobotAppearanceTints =
-    {
-        Vector3.One,
-        new Vector3(1.0f, 0.45f, 0.45f),
-        new Vector3(0.45f, 0.65f, 1.0f),
-    };
-
     // A small, fixed set of point lights matching the visible ceiling
     // fixtures. Keeping the count fixed keeps the shader easy to explain.
     private readonly PointLight[] _ceilingLights =
@@ -76,12 +69,12 @@ public class Renderer
 
     public void CycleRobotAppearance()
     {
-        _robotAppearance = (_robotAppearance + 1) % RobotAppearanceTints.Length;
+        _robotAppearance = (_robotAppearance + 1) % _robotTextures.Length;
     }
 
     public void SetRobotAppearance(int appearance)
     {
-        _robotAppearance = Math.Clamp(appearance, 0, RobotAppearanceTints.Length - 1);
+        _robotAppearance = Math.Clamp(appearance, 0, _robotTextures.Length - 1);
     }
 
     public void Resize(int width, int height)
@@ -199,9 +192,11 @@ public class Renderer
     private void DrawReflectionCube(Matrix4 model, Vector3 color, TextureKind textureKind)
     {
         _shader!.SetMatrix4("uModel", model);
-        if (textureKind == TextureKind.Robot)
+        if (textureKind == TextureKind.Robot && TexturesEnabled)
         {
-            color *= RobotAppearanceTints[_robotAppearance];
+            // The selected robot texture supplies the appearance color
+            // consistently across the body parts.
+            color = Vector3.One;
         }
         _shader.SetVector3("uColor", color);
         Texture? texture = TexturesEnabled && textureKind == TextureKind.Robot
@@ -247,9 +242,9 @@ public class Renderer
     private void DrawCube(Matrix4 model, Vector3 color, TextureKind textureKind)
     {
         _shader!.SetMatrix4("uModel", model);
-        if (textureKind == TextureKind.Robot)
+        if (textureKind == TextureKind.Robot && TexturesEnabled)
         {
-            color *= RobotAppearanceTints[_robotAppearance];
+            color = Vector3.One;
         }
         _shader.SetVector3("uColor", color);
 

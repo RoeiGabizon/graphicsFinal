@@ -177,7 +177,7 @@ public class Robot
 
     private static readonly Vector3 TorsoColor = new(0.75f, 0.15f, 0.15f);
     private static readonly Vector3 HeadColor = new(0.85f, 0.85f, 0.85f);
-    private static readonly Vector3 ArmColor = new(0.75f, 0.75f, 0.15f);
+    private static readonly Vector3 ArmColor = new(0.48f, 0.45f, 0.30f);
     private static readonly Vector3 LegColor = new(0.20f, 0.35f, 0.75f);
     private static readonly Vector3 EyeColor = new(0.10f, 0.90f, 0.95f);
     private static readonly Vector3 AntennaColor = new(0.90f, 0.30f, 0.10f);
@@ -279,12 +279,12 @@ public class Robot
         Matrix4 leftEyeLocal =
             Matrix4.CreateScale(eyeSize, eyeSize, eyeSize) *
             Matrix4.CreateTranslation(-eyeSpacing, eyeY, eyeZ);
-        drawCube(leftEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.Robot);
+        drawCube(leftEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.None);
 
         Matrix4 rightEyeLocal =
             Matrix4.CreateScale(eyeSize, eyeSize, eyeSize) *
             Matrix4.CreateTranslation(eyeSpacing, eyeY, eyeZ);
-        drawCube(rightEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.Robot);
+        drawCube(rightEyeLocal * headRotation * neckJoint, EyeColor, TextureKind.None);
 
         // Small antenna on top of the head.
         const float antennaThickness = 0.05f;
@@ -292,7 +292,7 @@ public class Robot
         Matrix4 antennaLocal =
             Matrix4.CreateScale(antennaThickness, antennaLength, antennaThickness) *
             Matrix4.CreateTranslation(0.0f, HeadSize + antennaLength / 2.0f, 0.0f);
-        drawCube(antennaLocal * headRotation * neckJoint, AntennaColor, TextureKind.Robot);
+        drawCube(antennaLocal * headRotation * neckJoint, AntennaColor, TextureKind.None);
     }
 
     private void DrawArms(CubeDrawer drawCube, Matrix4 root, float hipY)
@@ -318,7 +318,7 @@ public class Robot
         // Small shoulder pad cube, does not rotate with the arm.
         const float shoulderPadSize = 0.3f;
         Matrix4 shoulderPadLocal = Matrix4.CreateScale(shoulderPadSize, shoulderPadSize, shoulderPadSize);
-        drawCube(shoulderPadLocal * shoulderJoint, ShoulderColor, TextureKind.Robot);
+        drawCube(shoulderPadLocal * shoulderJoint, ShoulderColor, TextureKind.None);
 
         // 2) Shoulder rotation: swings the whole arm forward/back. The
         //    upper-arm model is explicitly upperArmLocal * shoulderRotation
