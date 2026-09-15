@@ -219,130 +219,129 @@ public class MainForm : Form
     private void CreateControlPanel()
     {
         _controlPanel.AutoScroll = true;
-        int y = 40;
+        FlowLayoutPanel mainLayout = new()
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            Padding = new Padding(8),
+        };
+        _controlPanel.Controls.Add(mainLayout);
 
-        GroupBox projectionGroup = new()
-        {
-            Text = "Projection",
-            Location = new Point(8, y),
-            Size = new Size(268, 78),
-        };
-        _perspectiveRadio = new RadioButton
-        {
-            Text = "Perspective",
-            Location = new Point(10, 22),
-            AutoSize = true,
-            Checked = true,
-        };
-        _orthographicRadio = new RadioButton
-        {
-            Text = "Orthographic",
-            Location = new Point(10, 46),
-            AutoSize = true,
-        };
+        GroupBox projectionGroup = CreateGroupBox("Projection", 95);
+        FlowLayoutPanel projectionLayout = CreateVerticalGroupLayout();
+        _perspectiveRadio = new RadioButton { Text = "Perspective", AutoSize = true, Checked = true };
+        _orthographicRadio = new RadioButton { Text = "Orthographic", AutoSize = true };
         _perspectiveRadio.CheckedChanged += (_, _) => SetProjectionFromControls();
         _orthographicRadio.CheckedChanged += (_, _) => SetProjectionFromControls();
-        projectionGroup.Controls.AddRange(new Control[] { _perspectiveRadio, _orthographicRadio });
-        _controlPanel.Controls.Add(projectionGroup);
-        y += 86;
+        projectionLayout.Controls.Add(_perspectiveRadio);
+        projectionLayout.Controls.Add(_orthographicRadio);
+        projectionGroup.Controls.Add(projectionLayout);
+        mainLayout.Controls.Add(projectionGroup);
 
-        GroupBox lightingGroup = new()
-        {
-            Text = "Lighting",
-            Location = new Point(8, y),
-            Size = new Size(268, 205),
-        };
-        TrackBar lightTrackBar = CreateTrackBar(0, 30, 12, new Point(10, 28), 230);
-        TrackBar ambientTrackBar = CreateTrackBar(0, 100, 25, new Point(10, 98), 230);
-        lightingGroup.Controls.Add(new Label { Text = "Ceiling Light Intensity", Location = new Point(10, 10), AutoSize = true });
-        lightingGroup.Controls.Add(lightTrackBar);
-        lightingGroup.Controls.Add(new Label { Text = "Ambient Scene Light", Location = new Point(10, 80), AutoSize = true });
-        lightingGroup.Controls.Add(ambientTrackBar);
-        _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", Location = new Point(10, 160), AutoSize = true, Checked = true };
-        lightingGroup.Controls.Add(_spotlightCheckBox);
+        GroupBox lightingGroup = CreateGroupBox("Lighting", 225);
+        FlowLayoutPanel lightingLayout = CreateVerticalGroupLayout();
+        TrackBar lightTrackBar = CreateTrackBar(0, 30, 18);
+        TrackBar ambientTrackBar = CreateTrackBar(0, 100, 65);
+        lightingLayout.Controls.Add(new Label { Text = "Ceiling Light Intensity", AutoSize = true });
+        lightingLayout.Controls.Add(lightTrackBar);
+        lightingLayout.Controls.Add(new Label { Text = "Ambient Scene Light", AutoSize = true });
+        lightingLayout.Controls.Add(ambientTrackBar);
+        _spotlightCheckBox = new CheckBox { Text = "Robot Spotlight", AutoSize = true, Checked = true };
+        lightingLayout.Controls.Add(_spotlightCheckBox);
         lightTrackBar.Scroll += (_, _) => _renderer.MainLightIntensity = lightTrackBar.Value / 10.0f;
         ambientTrackBar.Scroll += (_, _) => _renderer.AmbientIntensity = ambientTrackBar.Value / 100.0f;
         _spotlightCheckBox.CheckedChanged += (_, _) => _spotlightEnabled = _spotlightCheckBox.Checked;
-        _controlPanel.Controls.Add(lightingGroup);
-        y += 213;
+        lightingGroup.Controls.Add(lightingLayout);
+        mainLayout.Controls.Add(lightingGroup);
 
-        GroupBox robotGroup = new()
-        {
-            Text = "Robot",
-            Location = new Point(8, y),
-            Size = new Size(268, 340),
-        };
-        ComboBox appearanceCombo = new()
-        {
-            Location = new Point(10, 28),
-            Width = 230,
-            DropDownStyle = ComboBoxStyle.DropDownList,
-        };
+        GroupBox robotGroup = CreateGroupBox("Robot", 380);
+        FlowLayoutPanel robotLayout = CreateVerticalGroupLayout();
+        ComboBox appearanceCombo = new() { Width = 240, DropDownStyle = ComboBoxStyle.DropDownList };
         appearanceCombo.Items.AddRange(new object[] { "Metallic / Default", "Red", "Blue" });
         appearanceCombo.SelectedIndex = 0;
         appearanceCombo.SelectedIndexChanged += (_, _) => _renderer.SetRobotAppearance(appearanceCombo.SelectedIndex);
-        _walkingCheckBox = new CheckBox { Text = "Walking Animation", Location = new Point(10, 62), AutoSize = true, Checked = true };
+        _walkingCheckBox = new CheckBox { Text = "Walking Animation", AutoSize = true, Checked = true };
         _walkingCheckBox.CheckedChanged += (_, _) =>
         {
             _walkingAnimationEnabled = _walkingCheckBox.Checked;
             _armPoseTrackBar.Enabled = !_walkingAnimationEnabled;
         };
-        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10, new Point(10, 128), 230);
+        TrackBar scaleTrackBar = CreateTrackBar(5, 20, 10);
         scaleTrackBar.Scroll += (_, _) => _robot.Scale = scaleTrackBar.Value / 10.0f;
-        _headRotationTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 200), 230);
+        _headRotationTrackBar = CreateTrackBar(-45, 45, 0);
         _headRotationTrackBar.Scroll += (_, _) => _robot.HeadAngle = _headRotationTrackBar.Value;
-        _armPoseTrackBar = CreateTrackBar(-45, 45, 0, new Point(10, 272), 230);
+        _armPoseTrackBar = CreateTrackBar(-45, 45, 0);
         _armPoseTrackBar.Enabled = false;
         _armPoseTrackBar.Scroll += (_, _) =>
         {
             _robot.LeftArmAngle = _armPoseTrackBar.Value;
             _robot.RightArmAngle = -_armPoseTrackBar.Value;
         };
-        robotGroup.Controls.Add(new Label { Text = "Robot Appearance", Location = new Point(10, 10), AutoSize = true });
-        robotGroup.Controls.Add(appearanceCombo);
-        robotGroup.Controls.Add(_walkingCheckBox);
-        robotGroup.Controls.Add(new Label { Text = "Robot Scale", Location = new Point(10, 112), AutoSize = true });
-        robotGroup.Controls.Add(scaleTrackBar);
-        robotGroup.Controls.Add(new Label { Text = "Head Rotation", Location = new Point(10, 184), AutoSize = true });
-        robotGroup.Controls.Add(_headRotationTrackBar);
-        robotGroup.Controls.Add(new Label { Text = "Manual Arm Pose (walking off)", Location = new Point(10, 256), AutoSize = true });
-        robotGroup.Controls.Add(_armPoseTrackBar);
-        _controlPanel.Controls.Add(robotGroup);
-        y += 348;
+        robotLayout.Controls.Add(new Label { Text = "Robot Appearance", AutoSize = true });
+        robotLayout.Controls.Add(appearanceCombo);
+        robotLayout.Controls.Add(_walkingCheckBox);
+        robotLayout.Controls.Add(new Label { Text = "Robot Scale", AutoSize = true });
+        robotLayout.Controls.Add(scaleTrackBar);
+        robotLayout.Controls.Add(new Label { Text = "Head Rotation", AutoSize = true });
+        robotLayout.Controls.Add(_headRotationTrackBar);
+        robotLayout.Controls.Add(new Label { Text = "Manual Arm Pose", AutoSize = true });
+        robotLayout.Controls.Add(_armPoseTrackBar);
+        robotGroup.Controls.Add(robotLayout);
+        mainLayout.Controls.Add(robotGroup);
 
-        GroupBox renderingGroup = new()
-        {
-            Text = "Rendering",
-            Location = new Point(8, y),
-            Size = new Size(268, 105),
-        };
-        CheckBox texturesCheckBox = new() { Text = "Textures", Location = new Point(10, 22), AutoSize = true, Checked = true };
-        _shadowsCheckBox = new() { Text = "Planar Shadows", Location = new Point(10, 46), AutoSize = true, Checked = true };
-        _reflectionsCheckBox = new() { Text = "Planar Reflections", Location = new Point(10, 70), AutoSize = true, Checked = true };
+        GroupBox renderingGroup = CreateGroupBox("Rendering", 115);
+        FlowLayoutPanel renderingLayout = CreateVerticalGroupLayout();
+        CheckBox texturesCheckBox = new() { Text = "Textures", AutoSize = true, Checked = true };
+        _shadowsCheckBox = new() { Text = "Planar Shadows", AutoSize = true, Checked = true };
+        _reflectionsCheckBox = new() { Text = "Planar Reflections", AutoSize = true, Checked = true };
         texturesCheckBox.CheckedChanged += (_, _) => _renderer.TexturesEnabled = texturesCheckBox.Checked;
-        renderingGroup.Controls.AddRange(new Control[] { texturesCheckBox, _shadowsCheckBox, _reflectionsCheckBox });
-        _controlPanel.Controls.Add(renderingGroup);
-        y += 113;
+        renderingLayout.Controls.Add(texturesCheckBox);
+        renderingLayout.Controls.Add(_shadowsCheckBox);
+        renderingLayout.Controls.Add(_reflectionsCheckBox);
+        renderingGroup.Controls.Add(renderingLayout);
+        mainLayout.Controls.Add(renderingGroup);
 
-        GroupBox cameraGroup = new()
-        {
-            Text = "Camera",
-            Location = new Point(8, y),
-            Size = new Size(268, 148),
-        };
-        _fovTrackBar = CreateTrackBar(20, 90, 60, new Point(10, 28), 230);
+        GroupBox cameraGroup = CreateGroupBox("Camera", 180);
+        FlowLayoutPanel cameraLayout = CreateVerticalGroupLayout();
+        _fovTrackBar = CreateTrackBar(20, 90, 60);
         _fovTrackBar.Scroll += (_, _) => _camera.Fov = _fovTrackBar.Value;
-        _orthographicSizeTrackBar = CreateTrackBar(4, 30, 10, new Point(10, 92), 230);
+        _orthographicSizeTrackBar = CreateTrackBar(4, 30, 10);
         _orthographicSizeTrackBar.Scroll += (_, _) => _camera.OrthographicSize = _orthographicSizeTrackBar.Value;
         _orthographicSizeTrackBar.Enabled = false;
-        cameraGroup.Controls.Add(new Label { Text = "Field of View", Location = new Point(10, 10), AutoSize = true });
-        cameraGroup.Controls.Add(_fovTrackBar);
-        cameraGroup.Controls.Add(new Label { Text = "Orthographic Size", Location = new Point(10, 66), AutoSize = true });
-        cameraGroup.Controls.Add(_orthographicSizeTrackBar);
-        _controlPanel.Controls.Add(cameraGroup);
+        cameraLayout.Controls.Add(new Label { Text = "Field of View", AutoSize = true });
+        cameraLayout.Controls.Add(_fovTrackBar);
+        cameraLayout.Controls.Add(new Label { Text = "Orthographic Size", AutoSize = true });
+        cameraLayout.Controls.Add(_orthographicSizeTrackBar);
+        cameraGroup.Controls.Add(cameraLayout);
+        mainLayout.Controls.Add(cameraGroup);
     }
 
-    private static TrackBar CreateTrackBar(int minimum, int maximum, int value, Point location, int width = 170)
+    private static GroupBox CreateGroupBox(string text, int height)
+    {
+        return new GroupBox
+        {
+            Text = text,
+            Width = 290,
+            Height = height,
+            Margin = new Padding(0, 0, 0, 8),
+        };
+    }
+
+    private static FlowLayoutPanel CreateVerticalGroupLayout()
+    {
+        return new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            Padding = new Padding(8, 6, 8, 6),
+        };
+    }
+
+    private static TrackBar CreateTrackBar(int minimum, int maximum, int value, int width = 240)
     {
         return new TrackBar
         {
@@ -350,8 +349,10 @@ public class MainForm : Form
             Maximum = maximum,
             Value = value,
             TickFrequency = Math.Max(1, (maximum - minimum) / 5),
-            Location = location,
             Width = width,
+            AutoSize = false,
+            Height = 38,
+            Margin = new Padding(0, 2, 0, 10),
         };
     }
 
